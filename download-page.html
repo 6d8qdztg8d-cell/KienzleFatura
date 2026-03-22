@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KienzleFaktura – Download</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --red:     #D61919;
+      --red-dark:#b51414;
+      --dark:    #111111;
+      --dark-2:  #1a1a1a;
+      --dark-3:  #222222;
+      --mid:     #444444;
+      --light:   #f5f5f5;
+      --white:   #ffffff;
+      --border:  #e0e0e0;
+      --radius:  10px;
+      --shadow:  0 4px 24px rgba(0,0,0,0.10);
+      --font:    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--white);
+      color: var(--dark);
+      line-height: 1.6;
+    }
+
+    /* ── HEADER ───────────────────────────────────────────── */
+    header {
+      background: var(--dark);
+      padding: 0 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+    }
+
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      height: 68px;
+    }
+
+    .logo-box {
+      width: 40px;
+      height: 40px;
+      background: var(--red);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .logo-box span {
+      color: var(--white);
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .header-titles {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .header-app-name {
+      color: var(--white);
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .header-sub {
+      color: #888;
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+
+    .header-company {
+      margin-left: auto;
+      color: #666;
+      font-size: 0.82rem;
+      letter-spacing: 0.03em;
+    }
+
+    /* ── HERO ─────────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(160deg, #1a1a1a 0%, #111 50%, #1c0202 100%);
+      color: var(--white);
+      text-align: center;
+      padding: 80px 2rem 90px;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: rgba(214,25,25,0.18);
+      border: 1px solid rgba(214,25,25,0.4);
+      color: #f88;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border-radius: 20px;
+      padding: 4px 14px;
+      margin-bottom: 22px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+
+    .hero h1 .red { color: var(--red); }
+
+    .hero-desc {
+      color: #aaa;
+      font-size: 1rem;
+      margin-bottom: 44px;
+      letter-spacing: 0.01em;
+    }
+
+    /* DOWNLOAD BUTTON */
+    /* DOWNLOAD LINK: Replace href="#" with your GitHub Release URL */
+    .btn-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--red);
+      color: var(--white);
+      text-decoration: none;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 18px 40px;
+      border-radius: 50px;
+      box-shadow: 0 6px 32px rgba(214,25,25,0.45);
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-download:hover {
+      background: var(--red-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 40px rgba(214,25,25,0.55);
+    }
+
+    .btn-download:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 20px rgba(214,25,25,0.4);
+    }
+
+    .btn-icon {
+      font-size: 1.4rem;
+      line-height: 1;
+    }
+
+    .hero-meta {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .hero-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #888;
+      font-size: 0.82rem;
+      letter-spacing: 0.03em;
+    }
+
+    .hero-meta-item .dot {
+      width: 5px;
+      height: 5px;
+      background: #555;
+      border-radius: 50%;
+    }
+
+    .hero-meta-item strong {
+      color: #ccc;
+      font-weight: 600;
+    }
+
+    /* ── SECTION WRAPPER ──────────────────────────────────── */
+    .section {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 70px 2rem;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      color: var(--dark);
+    }
+
+    .section-title .accent { color: var(--red); }
+
+    .section-line {
+      width: 42px;
+      height: 3px;
+      background: var(--red);
+      border-radius: 2px;
+      margin-bottom: 36px;
+    }
+
+    /* ── FEATURES GRID ────────────────────────────────────── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--light);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 22px;
+      transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+    }
+
+    .feature-card:hover {
+      box-shadow: var(--shadow);
+      transform: translateY(-3px);
+      border-color: #ccc;
+    }
+
+    .feature-icon {
+      font-size: 1.9rem;
+      margin-bottom: 14px;
+      display: block;
+      line-height: 1;
+    }
+
+    .feature-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 5px;
+    }
+
+    .feature-desc {
+      font-size: 0.82rem;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    /* ── DIVIDER ──────────────────────────────────────────── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0 2rem;
+    }
+
+    /* ── INSTALL SECTION ──────────────────────────────────── */
+    .install-section {
+      background: var(--light);
+    }
+
+    .install-section .section {
+      padding: 70px 2rem;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      transition: box-shadow 0.2s;
+    }
+
+    .step:hover {
+      box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+    }
+
+    .step-num {
+      width: 34px;
+      height: 34px;
+      background: var(--red);
+      color: var(--white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .step-body {}
+
+    .step-label {
+      font-weight: 700;
+      font-size: 0.97rem;
+      color: var(--dark);
+      margin-bottom: 2px;
+    }
+
+    .step-detail {
+      font-size: 0.82rem;
+      color: #666;
+    }
+
+    .step-detail code {
+      background: #eee;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 0.8rem;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      color: var(--dark);
+    }
+
+    .smartscreen-note {
+      background: #fff8e1;
+      border: 1px solid #ffe08a;
+      border-left: 4px solid #f0a500;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      font-size: 0.84rem;
+      color: #5a4000;
+      line-height: 1.55;
+    }
+
+    .smartscreen-note strong {
+      color: #3d2b00;
+    }
+
+    .smartscreen-note .note-icon {
+      font-size: 1rem;
+      margin-right: 4px;
+    }
+
+    /* ── FOOTER ───────────────────────────────────────────── */
+    footer {
+      background: var(--dark);
+      color: #555;
+      text-align: center;
+      padding: 28px 2rem;
+      font-size: 0.8rem;
+      letter-spacing: 0.03em;
+    }
+
+    footer .footer-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    footer .logo-box-sm {
+      width: 24px;
+      height: 24px;
+      background: var(--red);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    footer .logo-box-sm span {
+      color: var(--white);
+      font-size: 0.82rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    footer .footer-name {
+      color: #888;
+      font-weight: 600;
+      font-size: 0.82rem;
+    }
+
+    footer p {
+      color: #444;
+      font-size: 0.78rem;
+    }
+
+    footer .sep { color: #333; margin: 0 6px; }
+
+    /* ── RESPONSIVE ───────────────────────────────────────── */
+    @media (max-width: 700px) {
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .header-company { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding: 56px 1.5rem 64px;
+      }
+
+      .btn-download {
+        font-size: 0.95rem;
+        padding: 16px 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══ HEADER ══════════════════════════════════════════════ -->
+  <header>
+    <div class="header-inner">
+      <div class="logo-box">
+        <span>K</span>
+      </div>
+      <div class="header-titles">
+        <span class="header-app-name">KienzleFaktura</span>
+        <span class="header-sub">v1.0 &middot; Sistemi i Faturimit</span>
+      </div>
+      <span class="header-company">Kienzle Sh.P.K.</span>
+    </div>
+  </header>
+
+  <!-- ══ HERO ════════════════════════════════════════════════ -->
+  <section class="hero">
+    <span class="hero-badge">Neu &mdash; Version 1.0</span>
+
+    <h1>
+      Kienzle<span class="red">Faktura</span>
+    </h1>
+    <p class="hero-desc">Sistemi i Faturimit &mdash; Das professionelle Rechnungsprogramm</p>
+
+    <!-- DOWNLOAD LINK: Replace href="#" with your GitHub Release URL -->
+    <a href="#" class="btn-download">
+      <span class="btn-icon">🪟</span>
+      Download für Windows (.exe)
+    </a>
+
+    <div class="hero-meta">
+      <span class="hero-meta-item">
+        <strong>~80 MB</strong>
+      </span>
+      <span class="hero-meta-item">
+        <span class="dot"></span>
+        Windows 10 / 11
+      </span>
+      <span class="hero-meta-item">
+        <span class="dot"></span>
+        64-bit
+      </span>
+      <span class="hero-meta-item">
+        <span class="dot"></span>
+        Kostenlos
+      </span>
+    </div>
+  </section>
+
+  <!-- ══ FEATURES ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2 class="section-title">Was kann <span class="accent">KienzleFaktura</span>?</h2>
+    <div class="section-line"></div>
+
+    <div class="features-grid">
+
+      <div class="feature-card">
+        <span class="feature-icon">📄</span>
+        <div class="feature-title">Fatura të Shpejta</div>
+        <div class="feature-desc">Rechnungen in Sekunden erstellen — schnell und einfach.</div>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">🖨️</span>
+        <div class="feature-title">PDF Druck</div>
+        <div class="feature-desc">Professionelle Rechnungen als PDF drucken und exportieren.</div>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">💾</span>
+        <div class="feature-title">Backup</div>
+        <div class="feature-desc">Automatische Datensicherung — keine Daten gehen verloren.</div>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">📊</span>
+        <div class="feature-title">CSV Import</div>
+        <div class="feature-desc">Bestehende Daten aus CSV-Dateien einfach importieren.</div>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">🏷️</span>
+        <div class="feature-title">Artikel-Katalog</div>
+        <div class="feature-desc">Preise &amp; Artikel zentral verwalten und wiederverwenden.</div>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">📋</span>
+        <div class="feature-title">Rechnungsliste</div>
+        <div class="feature-desc">Alle Rechnungen auf einen Blick &mdash; übersichtlich und schnell.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ══ INSTALL ══════════════════════════════════════════════ -->
+  <div class="install-section">
+    <div class="section">
+      <h2 class="section-title">Installation</h2>
+      <div class="section-line"></div>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-label">Datei herunterladen</div>
+            <div class="step-detail">
+              Klicken Sie auf den Download-Button und speichern Sie die Datei
+              <code>KienzleFaktura-Setup-1.0.0.exe</code>.
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-label">Setup-Datei ausführen</div>
+            <div class="step-detail">Doppelklick auf die heruntergeladene <code>.exe</code>-Datei, um die Installation zu starten.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-label">Installationsordner wählen</div>
+            <div class="step-detail">Wählen Sie den gewünschten Installationsordner und klicken Sie auf <strong>"Installieren"</strong>.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-label">App starten &mdash; fertig!</div>
+            <div class="step-detail">Nach der Installation können Sie KienzleFaktura sofort starten. Viel Erfolg!</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="smartscreen-note">
+        <span class="note-icon">⚠️</span>
+        <strong>Hinweis Windows SmartScreen:</strong>
+        Falls Windows SmartScreen beim Ausführen erscheint, klicken Sie auf
+        <strong>"Weitere Informationen"</strong> und anschließend auf
+        <strong>"Trotzdem ausführen"</strong>. Die Datei ist sicher.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FOOTER ══════════════════════════════════════════════ -->
+  <footer>
+    <div class="footer-logo">
+      <div class="logo-box-sm"><span>K</span></div>
+      <span class="footer-name">KienzleFaktura</span>
+    </div>
+    <p>
+      &copy; 2026 Kienzle Sh.P.K.
+      <span class="sep">&middot;</span>
+      KienzleFaktura v1.0
+      <span class="sep">&middot;</span>
+      Sistemi i Faturimit
+    </p>
+  </footer>
+
+</body>
+</html>

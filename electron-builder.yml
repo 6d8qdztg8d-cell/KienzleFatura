@@ -1,0 +1,37 @@
+appId: com.kienzle.faktura
+productName: KienzleFaktura
+copyright: Copyright © 2026 Kienzle Sh.P.K.
+
+directories:
+  buildResources: build
+  output: dist
+
+files:
+  - out/**/*
+
+extraResources:
+  - from: resources/
+    to: resources/
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: KienzleFaktura
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+
+mac:
+  target: dmg
+  icon: build/icon.icns
+
+linux:
+  target: AppImage
