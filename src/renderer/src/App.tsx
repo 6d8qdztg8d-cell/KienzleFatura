@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import ListeView from './views/ListeView'
 import FormularView from './views/FormularView'
 import EinstellungenView from './views/EinstellungenView'
@@ -22,14 +22,6 @@ export default function App() {
   const [selected, setSelected] = useState<NavItem>('formular')
   const [editRechnung, setEditRechnung] = useState<EditingRechnung | null>(null)
   const [formKey, setFormKey] = useState(0)
-
-  function navigateTo(nav: NavItem, rechnung?: EditingRechnung | null) {
-    setSelected(nav)
-    if (rechnung !== undefined) {
-      setEditRechnung(rechnung)
-      setFormKey(k => k + 1)
-    }
-  }
 
   function handleEdit(r: EditingRechnung) {
     setEditRechnung(r)
@@ -105,7 +97,7 @@ export default function App() {
 
         {/* Footer */}
         <div style={{ borderTop: '1px solid var(--border)', padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0 · ©2026 Kienzle Sh.P.K.</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0.3 · ©2026 Kienzle Sh.P.K.</div>
         </div>
       </div>
 
@@ -114,7 +106,7 @@ export default function App() {
         {selected === 'formular' && (
           <FormularView
             key={formKey}
-            rechnung={editRechnung}
+            rechnung={editRechnung as any}
             onSaved={handleSaved}
           />
         )}
