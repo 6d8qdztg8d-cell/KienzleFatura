@@ -16,7 +16,6 @@ function createWindow(): void {
     minHeight: 700,
     show: false,
     autoHideMenuBar: true,
-    titleBarStyle: 'default',
     title: 'KienzleFaktura – Kienzle Sh.P.K.',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -24,9 +23,7 @@ function createWindow(): void {
     }
   })
 
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
-  })
+  mainWindow.on('ready-to-show', () => mainWindow.show())
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
@@ -42,32 +39,45 @@ function createWindow(): void {
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.kienzle.faktura')
+  app.on('browser-window-created', (_, window) => optimizer.watchWindowShortcuts(window))
 
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
+  // ── DB ────────────────────────────────────────────────────────
+  ipcMain.handle('db:alleRechnungen', () => {
+    try { return db.alleRechnungen() } catch (e) { console.error(e); return [] }
+  })
+  ipcMain.handle('db:suchen', (_, q: string) => {
+    try { return db.suchen(q) } catch (e) { console.error(e); return [] }
+  })
+  ipcMain.handle('db:speichern', (_, r) => {
+    try { return db.speichern(r) } catch (e) { console.error(e); throw e }
+  })
+  ipcMain.handle('db:loeschen', (_, id: number) => {
+    try { db.loeschen(id) } catch (e) { console.error(e) }
+  })
+  ipcMain.handle('db:naechsteNrFatura', () => {
+    try { return db.naechsteNrFatura() } catch (e) { console.error(e); return '1' }
+  })
+  ipcMain.handle('db:alleArtikel', () => {
+    try { return db.alleArtikel() } catch (e) { console.error(e); return [] }
+  })
+  ipcMain.handle('db:speichernArtikel', (_, a) => {
+    try { db.artikelSpeichern(a) } catch (e) { console.error(e); throw e }
+  })
+  ipcMain.handle('db:loeschenArtikel', (_, nr: string) => {
+    try { db.artikelLoeschen(nr) } catch (e) { console.error(e) }
   })
 
-  // ── DB handlers ──────────────────────────────────────────────
-  ipcMain.handle('db:alleRechnungen', () => db.alleRechnungen())
-  ipcMain.handle('db:suchen', (_, q: string) => db.suchen(q))
-  ipcMain.handle('db:speichern', (_, r) => db.speichern(r))
-  ipcMain.handle('db:loeschen', (_, id: number) => db.loeschen(id))
-  ipcMain.handle('db:naechsteNrFatura', () => db.naechsteNrFatura())
-  ipcMain.handle('db:alleArtikel', () => db.alleArtikel())
-  ipcMain.handle('db:speichernArtikel', (_, a) => db.artikelSpeichern(a))
-  ipcMain.handle('db:loeschenArtikel', (_, nr: string) => db.artikelLoeschen(nr))
-
-  // ── PDF handlers ─────────────────────────────────────────────
+  // ── PDF ───────────────────────────────────────────────────────
   ipcMain.handle('pdf:drucken', async (_, r) => {
-    await pdfDrucken(r)
+    try { await pdfDrucken(r) } catch (e) { console.error('PDF print error:', e); throw e }
   })
   ipcMain.handle('pdf:speichern', async (_, r) => {
-    await pdfSpeichern(r, db.pdfDir)
+    try { await pdfSpeichern(r, db.pdfDir) } catch (e) { console.error('PDF save error:', e) }
   })
 
-  // ── Backup handlers ──────────────────────────────────────────
+  // ── Backup ────────────────────────────────────────────────────
   ipcMain.handle('backup:erstellen', () => {
-    return backupErstellen()
+    try { return backupErstellen() } catch (e) { console.error(e); throw e }
   })
 
   ipcMain.handle('backup:importieren', async (event) => {
@@ -77,13 +87,13 @@ app.whenReady().then(() => {
       filters: [{ name: 'ZIP', extensions: ['zip'] }],
       properties: ['openFile']
     })
-    if (result.canceled || result.filePaths.length === 0) return null
-    backupWiederherstellen(result.filePaths[0])
-    return 'ok'
+    if (result.canceled || !result.filePaths.length) return null
+    try { backupWiederherstellen(result.filePaths[0]); return 'ok' }
+    catch (e) { console.error(e); throw e }
   })
 
   ipcMain.handle('backup:wiederherstellen', (_, filePath: string) => {
-    backupWiederherstellen(filePath)
+    try { backupWiederherstellen(filePath) } catch (e) { console.error(e); throw e }
   })
 
   ipcMain.handle('backup:csvImportieren', async (event) => {
@@ -93,22 +103,20 @@ app.whenReady().then(() => {
       filters: [{ name: 'CSV', extensions: ['csv', 'txt'] }],
       properties: ['openFile']
     })
-    if (result.canceled || result.filePaths.length === 0) return null
-    return csvImportieren(result.filePaths[0])
+    if (result.canceled || !result.filePaths.length) return null
+    try { return csvImportieren(result.filePaths[0]) }
+    catch (e) { console.error(e); throw e }
   })
 
-  ipcMain.handle('backup:alleBackups', () => alleBackups())
-  ipcMain.handle('backup:imFinderOeffnen', (_, filePath: string) => backupImFinderOeffnen(filePath))
+  ipcMain.handle('backup:alleBackups', () => {
+    try { return alleBackups() } catch (e) { console.error(e); return [] }
+  })
+  ipcMain.handle('backup:imFinderOeffnen', (_, filePath: string) => {
+    backupImFinderOeffnen(filePath)
+  })
 
   createWindow()
-
-  app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
+  app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow() })
 })
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-})
+app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit() })
