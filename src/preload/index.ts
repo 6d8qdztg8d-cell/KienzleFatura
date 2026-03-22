@@ -8,6 +8,7 @@ const api = {
   speichernRechnung: (r: any) => ipcRenderer.invoke('db:speichern', r),
   loeschenRechnung: (id: number) => ipcRenderer.invoke('db:loeschen', id),
   naechsteNrFatura: () => ipcRenderer.invoke('db:naechsteNrFatura'),
+  suchenKunden: (q: string) => ipcRenderer.invoke('db:suchenKunden', q),
 
   // Artikel
   alleArtikel: () => ipcRenderer.invoke('db:alleArtikel'),

@@ -188,6 +188,26 @@ class DatenbankService {
   artikelLoeschen(nummer: string) {
     this.db.prepare('DELETE FROM artikel WHERE nummer=?').run(nummer)
   }
+
+  suchenKunden(q: string): { kundeName: string; kundeNUI: string; kundeAdresse: string; kundeStadt: string }[] {
+    if (!q || q.trim().length === 0) return []
+    const pat = `%${q}%`
+    const rows = this.db.prepare(`
+      SELECT kunde_name, kunde_nui, kunde_adresse, kunde_stadt,
+             MAX(erstellt) as letzte
+      FROM rechnungen
+      WHERE kunde_name LIKE ? AND kunde_name != ''
+      GROUP BY kunde_name, kunde_nui, kunde_adresse, kunde_stadt
+      ORDER BY letzte DESC
+      LIMIT 8
+    `).all(pat) as any[]
+    return rows.map(r => ({
+      kundeName: r.kunde_name || '',
+      kundeNUI: r.kunde_nui || '',
+      kundeAdresse: r.kunde_adresse || '',
+      kundeStadt: r.kunde_stadt || ''
+    }))
+  }
 }
 
 export const db = new DatenbankService()

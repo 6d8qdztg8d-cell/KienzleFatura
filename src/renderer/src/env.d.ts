@@ -7,6 +7,7 @@ interface Window {
     speichernRechnung: (r: any) => Promise<number>
     loeschenRechnung: (id: number) => Promise<void>
     naechsteNrFatura: () => Promise<string>
+    suchenKunden: (q: string) => Promise<any[]>
     alleArtikel: () => Promise<any[]>
     speichernArtikel: (a: any) => Promise<void>
     loeschenArtikel: (nr: string) => Promise<void>

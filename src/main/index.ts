@@ -66,6 +66,9 @@ app.whenReady().then(() => {
   ipcMain.handle('db:loeschenArtikel', (_, nr: string) => {
     try { db.artikelLoeschen(nr) } catch (e) { console.error(e) }
   })
+  ipcMain.handle('db:suchenKunden', (_, q: string) => {
+    try { return db.suchenKunden(q) } catch (e) { console.error(e); return [] }
+  })
 
   // ── PDF ───────────────────────────────────────────────────────
   ipcMain.handle('pdf:drucken', async (_, r) => {

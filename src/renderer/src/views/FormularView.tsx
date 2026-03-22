@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface Position {
   id: string
@@ -256,8 +256,17 @@ export default function FormularView({ rechnung: initialRechnung, onSaved }: Pro
           <div className="card">
             <div className="section-label" style={{ marginBottom: 12 }}>Klienti / Kundendaten</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <Field label="Emri / Name" placeholder="Emri i klientit" value={r.kundeName}
-                onChange={v => updateField('kundeName', v)} />
+              <KundeNameField
+                value={r.kundeName}
+                onChange={v => updateField('kundeName', v)}
+                onSelect={k => setR(prev => ({
+                  ...prev,
+                  kundeName: k.kundeName,
+                  kundeNUI: k.kundeNUI,
+                  kundeAdresse: k.kundeAdresse,
+                  kundeStadt: k.kundeStadt
+                }))}
+              />
               <Field label="NUI / Steuer-Nr." placeholder="K12345678L" value={r.kundeNUI}
                 onChange={v => updateField('kundeNUI', v)} />
               <Field label="Adresa" placeholder="Rr. Hasan Prishtina" value={r.kundeAdresse}
@@ -370,6 +379,92 @@ function SelectField({ label, options, value, onChange }: {
       <select className="premium-field" value={value} onChange={e => onChange(e.target.value)}>
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
+    </div>
+  )
+}
+
+interface Kunde {
+  kundeName: string
+  kundeNUI: string
+  kundeAdresse: string
+  kundeStadt: string
+}
+
+function KundeNameField({ value, onChange, onSelect }: {
+  value: string
+  onChange: (v: string) => void
+  onSelect: (k: Kunde) => void
+}) {
+  const [suggestions, setSuggestions] = useState<Kunde[]>([])
+  const [open, setOpen] = useState(false)
+  const [active, setActive] = useState(-1)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  async function handleChange(v: string) {
+    onChange(v)
+    setActive(-1)
+    if (v.trim().length === 0) { setSuggestions([]); setOpen(false); return }
+    try {
+      const results: Kunde[] = await window.api.suchenKunden(v)
+      setSuggestions(results)
+      setOpen(results.length > 0)
+    } catch { setSuggestions([]); setOpen(false) }
+  }
+
+  function select(k: Kunde) {
+    onSelect(k)
+    setSuggestions([])
+    setOpen(false)
+    setActive(-1)
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (!open) return
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActive(i => Math.min(i + 1, suggestions.length - 1)) }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(i => Math.max(i - 1, 0)) }
+    else if (e.key === 'Enter' && active >= 0) { e.preventDefault(); select(suggestions[active]) }
+    else if (e.key === 'Escape') { setOpen(false); setActive(-1) }
+  }
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative' }}>
+      <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-sub)', marginBottom: 5 }}>Emri / Name</div>
+      <input
+        className="premium-field"
+        placeholder="Emri i klientit"
+        value={value}
+        onChange={e => handleChange(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onFocus={() => suggestions.length > 0 && setOpen(true)}
+        autoComplete="off"
+      />
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 999,
+          background: 'var(--card)', border: '1.5px solid var(--border)',
+          borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+          marginTop: 4, overflow: 'hidden'
+        }}>
+          {suggestions.map((k, i) => (
+            <div
+              key={i}
+              onMouseDown={() => select(k)}
+              style={{
+                padding: '9px 13px', cursor: 'pointer',
+                background: i === active ? 'var(--accent-hi)' : 'transparent',
+                color: i === active ? '#fff' : 'var(--text)',
+                borderBottom: i < suggestions.length - 1 ? '1px solid var(--border)' : 'none'
+              }}
+            >
+              <div style={{ fontWeight: 600, fontSize: 13 }}>{k.kundeName}</div>
+              <div style={{ fontSize: 11, opacity: 0.65, marginTop: 1 }}>
+                {[k.kundeAdresse, k.kundeStadt, k.kundeNUI].filter(Boolean).join(' · ')}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
