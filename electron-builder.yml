@@ -20,15 +20,14 @@ win:
         - x64
 
 nsis:
-  oneClick: false
-  allowToChangeInstallationDirectory: true
+  oneClick: true
+  perMachine: false
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: KienzleFaktura
 
 mac:
   target: dmg
-  icon: build/icon.icns
 
 linux:
   target: AppImage
