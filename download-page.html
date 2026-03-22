@@ -464,8 +464,7 @@
     </h1>
     <p class="hero-desc">Sistemi i Faturimit &mdash; Das professionelle Rechnungsprogramm</p>
 
-    <!-- DOWNLOAD LINK: Replace href="#" with your GitHub Release URL -->
-    <a href="#" class="btn-download">
+    <a href="https://github.com/6d8qdztg8d-cell/KienzleFatura/releases/latest/download/KienzleFaktura-Setup-1.0.0.exe" class="btn-download" id="dl-btn">
       <span class="btn-icon">🪟</span>
       Download für Windows (.exe)
     </a>
@@ -607,5 +606,17 @@
     </p>
   </footer>
 
+  <script>
+    // Auto-fetch latest GitHub release download URL
+    fetch('https://api.github.com/repos/6d8qdztg8d-cell/KienzleFatura/releases/latest')
+      .then(r => r.json())
+      .then(data => {
+        const asset = data.assets && data.assets.find(a => a.name.endsWith('.exe'))
+        if (asset) {
+          document.getElementById('dl-btn').href = asset.browser_download_url
+        }
+      })
+      .catch(() => {}) // fallback: keep static link
+  </script>
 </body>
 </html>
