@@ -1,6 +1,7 @@
 {
-  "buildCommand": null,
+  "version": 2,
+  "installCommand": "echo 'Static site'",
+  "buildCommand": "",
   "outputDirectory": ".",
-  "installCommand": null,
   "framework": null
 }
