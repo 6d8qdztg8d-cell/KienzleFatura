@@ -1,6 +1,6 @@
 {
   "name": "kienzle-faktura",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Kienzle Sh.P.K. – Faktura System",
   "main": "./out/main/index.js",
   "scripts": {
