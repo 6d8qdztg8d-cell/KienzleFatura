@@ -154,7 +154,7 @@ export default function FormularView({ rechnung: initialRechnung, onSaved }: Pro
       await window.api.pdfSpeichern(savedR).catch((e: any) => console.error('PDF save error:', e))
       setR(savedR)
       showToast(`Fatura u ruajt: ${r.kennzeichen}`, true)
-      setTimeout(onSaved, 1500)
+      onSaved()
     } catch (e: any) {
       console.error('Save error:', e)
       showToast('Gabim gjatë ruajtjes!', false)
