@@ -33,15 +33,18 @@ Firma: Kienzle Sh.P.K.
 ## Installer (NSIS)
 - Konfiguration: `electron-builder.yml`
 - Custom Script: `build/installer.nsh`
-  - Beendet laufende App vor Installation (`taskkill`)
-  - Löscht alten Installationsordner forcefully (`customRemoveFiles`)
+  - Beendet laufende App vor Installation (`taskkill` für KienzleFAT.exe + KienzleFaktura.exe)
+  - Löscht im `customInit` AUTOMATISCH alle alten Registry-Einträge und Ordner (KienzleFAT + KienzleFaktura) BEVOR der Installer nach alter Version sucht → kein Fehler mehr
+  - `customRemoveFiles` löscht Installationsordner forcefully beim Deinstallieren
 - `perMachine: true` → installiert in `C:\Program Files\`
 - `oneClick: true` → kein Installations-Dialog
+- **Ab v1.0.15**: Neue `.exe` einfach draufklicken – überschreibt automatisch ohne Fehlermeldung
 
 ## Bekannte Probleme & Fixes
-- **"Alte Anwendungsdateien konnten nicht deinstalliert werden"**: Tritt auf wenn alte Version manuell gelöscht wurde ohne Deinstallation. Fix: `uninstall-fix.bat` als Admin ausführen (auf Webseite verfügbar), dann neu installieren.
+- **"Alte Anwendungsdateien konnten nicht deinstalliert werden"**: War ein Problem bis v1.0.14. Ab v1.0.15 behoben durch `customInit` in `build/installer.nsh`. Falls es bei alten Installationen nochmal auftritt: `uninstall-fix.bat` als Admin ausführen (auf Webseite verfügbar).
 - **Native Module**: `better-sqlite3` muss immer mit `npx @electron/rebuild -f -w better-sqlite3` neu gebaut werden nach `npm install`
 - **Cross-Compile**: Kein Cross-Compile von macOS zu Windows möglich (kein Wine/Docker). Immer über GitHub Actions bauen.
+- **Tag ≠ Version**: Tag-Version in git MUSS identisch mit `package.json → version` sein – sonst heißt die .exe falsch. Immer beide zusammen updaten!
 
 ## Wichtige Dateien
 - `package.json` – Version hier updaten vor jedem Build
