@@ -38,7 +38,7 @@ export interface Artikel {
 }
 
 function getAppDir(): string {
-  const dir = path.join(app.getPath('userData'), 'KienzleFaktura')
+  const dir = path.join(app.getPath('userData'), 'KienzleFAT')
   fs.mkdirSync(dir, { recursive: true })
   return dir
 }

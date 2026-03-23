@@ -1,4 +1,4 @@
-# KienzleFaktura – Projektkontext für Claude
+# KienzleFAT – Projektkontext für Claude
 
 ## Was ist das?
 Electron-App (React + TypeScript + better-sqlite3) für Rechnungsverwaltung.

@@ -1,6 +1,6 @@
 @echo off
 echo ====================================
-echo  KienzleFaktura - Windows Build
+echo  KienzleFAT - Windows Build
 echo ====================================
 echo.
 

@@ -16,7 +16,7 @@ function createWindow(): void {
     minHeight: 700,
     show: false,
     autoHideMenuBar: true,
-    title: 'KienzleFaktura – Kienzle Sh.P.K.',
+    title: 'KienzleFAT – Kienzle Sh.P.K.',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false

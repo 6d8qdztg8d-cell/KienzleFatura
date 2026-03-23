@@ -1,7 +1,7 @@
 {
-  "name": "kienzle-faktura",
-  "version": "1.0.13",
-  "description": "Kienzle Sh.P.K. – Faktura System",
+  "name": "kienzle-fat",
+  "version": "1.0.14",
+  "description": "Kienzle Sh.P.K. – FAT System",
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",

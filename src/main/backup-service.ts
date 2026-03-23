@@ -8,7 +8,7 @@ import { db } from './database'
 export function backupErstellen(): string {
   const now = new Date()
   const pad = (n: number) => String(n).padStart(2, '0')
-  const name = `KienzleFaktura_Backup_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}`
+  const name = `KienzleFAT_Backup_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}`
   const zipPath = path.join(db.backupDir, `${name}.zip`)
 
   const zip = new AdmZip()

@@ -2,7 +2,7 @@
 set -e
 
 echo "===================================="
-echo " KienzleFaktura - macOS Build"
+echo " KienzleFAT - macOS Build"
 echo "===================================="
 echo
 

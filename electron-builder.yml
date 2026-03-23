@@ -1,5 +1,5 @@
 appId: com.kienzle.faktura
-productName: KienzleFaktura
+productName: KienzleFAT
 copyright: Copyright © 2026 Kienzle Sh.P.K.
 
 directories:
@@ -24,7 +24,7 @@ nsis:
   perMachine: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  shortcutName: KienzleFaktura
+  shortcutName: KienzleFAT
 
 mac:
   target: dmg
