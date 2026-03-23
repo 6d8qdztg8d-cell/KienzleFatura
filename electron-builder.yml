@@ -21,7 +21,7 @@ win:
 
 nsis:
   oneClick: true
-  perMachine: false
+  perMachine: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: KienzleFaktura
