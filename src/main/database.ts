@@ -84,14 +84,17 @@ class DatenbankService {
         erstellt      TEXT DEFAULT '',
         geaendert     TEXT DEFAULT ''
       );
-      CREATE UNIQUE INDEX IF NOT EXISTS idx_nr_fatura_unique
-        ON rechnungen(nr_fatura) WHERE nr_fatura != '';
       CREATE TABLE IF NOT EXISTS artikel (
         nummer        TEXT PRIMARY KEY,
         beschreibung  TEXT DEFAULT '',
         preis         REAL DEFAULT 0
       );
     `)
+    try {
+      this.db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_nr_fatura_unique ON rechnungen(nr_fatura) WHERE nr_fatura != ''`)
+    } catch (e) {
+      console.warn('Index already exists or could not be created:', e)
+    }
   }
 
   private rowToRechnung(row: any): Rechnung {
