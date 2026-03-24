@@ -5,7 +5,7 @@ import { db } from './database'
 import { pdfDrucken, pdfSpeichern } from './pdf-service'
 import {
   backupErstellen, backupWiederherstellen, alleBackups,
-  backupImFinderOeffnen, csvImportieren
+  backupImFinderOeffnen, csvImportieren, autoBackup
 } from './backup-service'
 
 function createWindow(): void {
@@ -39,6 +39,7 @@ function createWindow(): void {
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.kienzle.faktura')
+  autoBackup()
   app.on('browser-window-created', (_, window) => optimizer.watchWindowShortcuts(window))
 
   // ── DB ────────────────────────────────────────────────────────

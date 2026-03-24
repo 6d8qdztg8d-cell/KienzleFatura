@@ -1,6 +1,6 @@
 {
   "name": "kienzle-fat",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "Kienzle Sh.P.K. – FAT System",
   "main": "./out/main/index.js",
   "scripts": {

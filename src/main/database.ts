@@ -57,6 +57,9 @@ class DatenbankService {
     fs.mkdirSync(this.pdfDir, { recursive: true })
     fs.mkdirSync(this.backupDir, { recursive: true })
     this.db = new Database(this.dbPath)
+    this.db.pragma('journal_mode = WAL')
+    this.db.pragma('synchronous = NORMAL')
+    this.db.pragma('foreign_keys = ON')
     this.createTables()
   }
 
@@ -183,6 +186,10 @@ class DatenbankService {
 
   artikelSpeichern(a: Artikel) {
     this.db.prepare('INSERT OR REPLACE INTO artikel(nummer,beschreibung,preis) VALUES(?,?,?)').run(a.id, a.beschreibung, a.preis)
+  }
+
+  transaction<T>(fn: () => T): () => T {
+    return this.db.transaction(fn)
   }
 
   artikelLoeschen(nummer: string) {

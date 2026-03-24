@@ -5,6 +5,26 @@ import { shell } from 'electron'
 import type { Rechnung, Position } from './database'
 import { db } from './database'
 
+const MAX_BACKUPS = 30
+
+function alteBackupsAufraeumen(): void {
+  const backups = alleBackups()
+  if (backups.length > MAX_BACKUPS) {
+    backups.slice(MAX_BACKUPS).forEach(b => {
+      try { fs.unlinkSync(b.filePath) } catch {}
+    })
+  }
+}
+
+export function autoBackup(): void {
+  const today = new Date().toISOString().slice(0, 10)
+  const backups = alleBackups()
+  const heuteExistiert = backups.some(b => b.name.includes(today))
+  if (!heuteExistiert) {
+    try { backupErstellen() } catch (e) { console.error('Auto-backup failed:', e) }
+  }
+}
+
 export function backupErstellen(): string {
   const now = new Date()
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -30,6 +50,7 @@ export function backupErstellen(): string {
   }
 
   zip.writeZip(zipPath)
+  alteBackupsAufraeumen()
   return zipPath
 }
 
@@ -125,16 +146,19 @@ export function csvImportieren(csvPath: string): number {
   }
 
   let anzahl = 0
-  for (const nr of reihenfolge) {
-    const entry = gruppen.get(nr)
-    if (!entry) continue
-    entry.rechnung.positionen = entry.positionen.length > 0 ? entry.positionen : [{
-      id: `empty-${Date.now()}`, cope: '', artikelNr: '', pershkrimi: '', cmimi: '', gjithsejt: 0
-    }]
-    entry.rechnung.totali = entry.rechnung.positionen.reduce((s, p) => s + p.gjithsejt, 0)
-    db.speichern(entry.rechnung as Rechnung)
-    anzahl++
-  }
+  const importAll = db.transaction(() => {
+    for (const nr of reihenfolge) {
+      const entry = gruppen.get(nr)
+      if (!entry) continue
+      entry.rechnung.positionen = entry.positionen.length > 0 ? entry.positionen : [{
+        id: `empty-${Date.now()}`, cope: '', artikelNr: '', pershkrimi: '', cmimi: '', gjithsejt: 0
+      }]
+      entry.rechnung.totali = entry.rechnung.positionen.reduce((s, p) => s + p.gjithsejt, 0)
+      db.speichern(entry.rechnung as Rechnung)
+      anzahl++
+    }
+  })
+  importAll()
   return anzahl
 }
 
