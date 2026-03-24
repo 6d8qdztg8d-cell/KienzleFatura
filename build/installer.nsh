@@ -4,7 +4,11 @@
   nsExec::Exec 'taskkill /F /IM KienzleFaktura.exe'
   Sleep 1000
 
-  ; Alte Registry-Einträge löschen BEVOR Installer alte Version sucht
+  ; Alte Registry-Einträge löschen (alle bekannten IDs)
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\com.kienzle.fat"
+  DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\com.kienzle.fat"
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\com.kienzle.faktura"
+  DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\com.kienzle.faktura"
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\KienzleFAT"
   DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\KienzleFAT"
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\KienzleFaktura"
