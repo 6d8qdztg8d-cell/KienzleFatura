@@ -97,7 +97,7 @@ export default function App() {
 
         {/* Footer */}
         <div style={{ borderTop: '1px solid var(--border)', padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0.26 · ©2026 Kienzle Sh.P.K.</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0.27 · ©2026 Kienzle Sh.P.K.</div>
         </div>
       </div>
 
@@ -112,7 +112,7 @@ export default function App() {
           />
         </div>
         <div style={{ display: selected === 'liste' ? 'flex' : 'none', flexDirection: 'column', height: '100%' }}>
-          <ListeView onEdit={handleEdit} />
+          <ListeView onEdit={handleEdit} isVisible={selected === 'liste'} />
         </div>
         <div style={{ display: selected === 'einstellungen' ? 'flex' : 'none', flexDirection: 'column', height: '100%' }}>
           <EinstellungenView />

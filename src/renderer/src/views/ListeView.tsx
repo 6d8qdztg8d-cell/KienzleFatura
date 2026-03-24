@@ -13,6 +13,7 @@ interface Rechnung {
 
 interface Props {
   onEdit: (r: any) => void
+  isVisible: boolean
 }
 
 function fmtDate(iso: string): string {
@@ -22,7 +23,7 @@ function fmtDate(iso: string): string {
   } catch { return iso }
 }
 
-export default function ListeView({ onEdit }: Props) {
+export default function ListeView({ onEdit, isVisible }: Props) {
   const [rechnungen, setRechnungen] = useState<Rechnung[]>([])
   const [search, setSearch] = useState('')
   const [deleteId, setDeleteId] = useState<number | null>(null)
@@ -36,6 +37,7 @@ export default function ListeView({ onEdit }: Props) {
   }, [search])
 
   useEffect(() => { laden() }, [laden])
+  useEffect(() => { if (isVisible) laden() }, [isVisible])
 
   function showToast(text: string, ok: boolean) {
     setToast({ text, ok })
