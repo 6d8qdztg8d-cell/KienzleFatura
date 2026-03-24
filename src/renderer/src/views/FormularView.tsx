@@ -29,6 +29,7 @@ interface Rechnung {
 interface Props {
   rechnung: Rechnung | null
   onSaved: () => void
+  onClear: () => void
 }
 
 const FATUROIS = ['Ibrahim', 'Cufa', 'Agnesa']
@@ -69,7 +70,7 @@ function newRechnung(): Rechnung {
   }
 }
 
-export default function FormularView({ rechnung: initialRechnung, onSaved }: Props) {
+export default function FormularView({ rechnung: initialRechnung, onSaved, onClear }: Props) {
   const [r, setR] = useState<Rechnung>(initialRechnung ?? newRechnung())
   const [nrvSuffix, setNrvSuffix] = useState('')
   const [artikelListe, setArtikelListe] = useState<any[]>([])
@@ -194,6 +195,7 @@ export default function FormularView({ rechnung: initialRechnung, onSaved }: Pro
             {r.id ? (r.kennzeichen || 'Faturë') : 'Krijo faturë të re'}
           </div>
         </div>
+        <button className="btn-ghost" onClick={onClear}>🗑️ Clear</button>
         <button className="btn-ghost" onClick={drucken}>🖨️ Printo</button>
         <button className="btn-primary" onClick={speichern}>💾 Ruaj</button>
       </div>
