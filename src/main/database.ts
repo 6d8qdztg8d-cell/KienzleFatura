@@ -84,6 +84,8 @@ class DatenbankService {
         erstellt      TEXT DEFAULT '',
         geaendert     TEXT DEFAULT ''
       );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_nr_fatura_unique
+        ON rechnungen(nr_fatura) WHERE nr_fatura != '';
       CREATE TABLE IF NOT EXISTS artikel (
         nummer        TEXT PRIMARY KEY,
         beschreibung  TEXT DEFAULT '',
@@ -138,6 +140,8 @@ class DatenbankService {
     const posJson = JSON.stringify(r.positionen)
 
     if (!r.id || r.id === 0) {
+      const existing = this.db.prepare('SELECT id FROM rechnungen WHERE nr_fatura = ? AND nr_fatura != ""').get(r.nrFatura)
+      if (existing) throw new Error(`DUPLICATE_NR_FATURA:${r.nrFatura}`)
       const stmt = this.db.prepare(`
         INSERT INTO rechnungen
         (kennzeichen,nr_fatura,nrv,faturoi,pagesa,data_fatura,pagesa_deri,

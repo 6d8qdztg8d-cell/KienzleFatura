@@ -157,7 +157,11 @@ export default function FormularView({ rechnung: initialRechnung, onSaved }: Pro
       onSaved()
     } catch (e: any) {
       console.error('Save error:', e)
-      showToast('Gabim gjatë ruajtjes!', false)
+      if (e?.message?.includes('DUPLICATE_NR_FATURA')) {
+        showToast(`Nr. Faturës ${r.nrFatura} ekziston tashmë!`, false)
+      } else {
+        showToast('Gabim gjatë ruajtjes!', false)
+      }
     }
   }
 
