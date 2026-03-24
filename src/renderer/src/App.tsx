@@ -29,11 +29,6 @@ export default function App() {
     setSelected('formular')
   }
 
-  function handleSaved() {
-    setEditRechnung(null)
-    setSelected('liste')
-  }
-
   function handleNeueRechnung() {
     setEditRechnung(null)
     setFormKey(k => k + 1)
@@ -97,7 +92,7 @@ export default function App() {
 
         {/* Footer */}
         <div style={{ borderTop: '1px solid var(--border)', padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0.27 · ©2026 Kienzle Sh.P.K.</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0.28 · ©2026 Kienzle Sh.P.K.</div>
         </div>
       </div>
 
@@ -107,7 +102,6 @@ export default function App() {
           <FormularView
             key={formKey}
             rechnung={editRechnung as any}
-            onSaved={handleSaved}
             onClear={handleNeueRechnung}
           />
         </div>

@@ -28,7 +28,6 @@ interface Rechnung {
 
 interface Props {
   rechnung: Rechnung | null
-  onSaved: () => void
   onClear: () => void
 }
 
@@ -70,7 +69,7 @@ function newRechnung(): Rechnung {
   }
 }
 
-export default function FormularView({ rechnung: initialRechnung, onSaved, onClear }: Props) {
+export default function FormularView({ rechnung: initialRechnung, onClear }: Props) {
   const [r, setR] = useState<Rechnung>(initialRechnung ?? newRechnung())
   const [nrvSuffix, setNrvSuffix] = useState('')
   const [artikelListe, setArtikelListe] = useState<any[]>([])
@@ -153,9 +152,8 @@ export default function FormularView({ rechnung: initialRechnung, onSaved, onCle
       const newId = await window.api.speichernRechnung(toSave)
       const savedR = { ...toSave, id: newId }
       await window.api.pdfSpeichern(savedR).catch((e: any) => console.error('PDF save error:', e))
-      setR(savedR)
       showToast(`Fatura u ruajt: ${r.kennzeichen}`, true)
-      onSaved()
+      onClear()
     } catch (e: any) {
       const msg = e?.message ?? String(e)
       console.error('Save error:', msg)
