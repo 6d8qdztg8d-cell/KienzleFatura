@@ -157,11 +157,12 @@ export default function FormularView({ rechnung: initialRechnung, onSaved, onCle
       showToast(`Fatura u ruajt: ${r.kennzeichen}`, true)
       onSaved()
     } catch (e: any) {
-      console.error('Save error:', e)
-      if (e?.message?.includes('DUPLICATE_NR_FATURA')) {
+      const msg = e?.message ?? String(e)
+      console.error('Save error:', msg)
+      if (msg.includes('DUPLICATE_NR_FATURA')) {
         showToast(`Nr. Faturës ${r.nrFatura} ekziston tashmë!`, false)
       } else {
-        showToast('Gabim gjatë ruajtjes!', false)
+        showToast(`Gabim: ${msg}`, false)
       }
     }
   }
