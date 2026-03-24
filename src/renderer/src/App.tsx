@@ -10,7 +10,7 @@ const navItems: { key: NavItem; label: string; icon: string }[] = [
   { key: 'formular',      label: 'Faturë e Re',  icon: '📄' },
   { key: 'liste',         label: 'Faturat',       icon: '📋' },
   { key: 'einstellungen', label: 'Artikujt',      icon: '🏷️' },
-  { key: 'backup',        label: 'Rezervimi',     icon: '💾' },
+  { key: 'backup',        label: 'Backups',       icon: '💾' },
 ]
 
 interface EditingRechnung {
@@ -61,7 +61,7 @@ export default function App() {
             }}>K</div>
             <div>
               <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: 1, color: 'var(--text)' }}>KIENZLE</div>
-              <div style={{ fontSize: 10, color: 'var(--text-sub)' }}>Faktura System</div>
+              <div style={{ fontSize: 10, color: 'var(--text-sub)' }}>Fatura System</div>
             </div>
           </div>
         </div>
@@ -97,7 +97,7 @@ export default function App() {
 
         {/* Footer */}
         <div style={{ borderTop: '1px solid var(--border)', padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0.7 · ©2026 Kienzle Sh.P.K.</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0.19 · ©2026 Kienzle Sh.P.K.</div>
         </div>
       </div>
 

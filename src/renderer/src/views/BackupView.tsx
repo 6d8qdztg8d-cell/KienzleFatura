@@ -70,7 +70,7 @@ export default function BackupView() {
         padding: '16px 24px', background: 'var(--card)',
         borderBottom: '1px solid var(--border)', flexShrink: 0
       }}>
-        <div className="section-label">Rezervimi</div>
+        <div className="section-label">Backups</div>
         <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', marginTop: 3 }}>Backup & Wiederherstellung</div>
       </div>
 

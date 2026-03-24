@@ -166,7 +166,7 @@ class DatenbankService {
   }
 
   naechsteNrFatura(): string {
-    let maxNr = 478
+    let maxNr = 1493
     const rows = this.db.prepare('SELECT nr_fatura FROM rechnungen').all() as any[]
     for (const row of rows) {
       const n = parseInt(row.nr_fatura)
