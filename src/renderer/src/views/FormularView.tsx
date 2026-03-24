@@ -29,6 +29,7 @@ interface Rechnung {
 interface Props {
   rechnung: Rechnung | null
   onClear: () => void
+  isVisible: boolean
 }
 
 const FATUROIS = ['Ibrahim', 'Cufa', 'Agnesa']
@@ -69,11 +70,15 @@ function newRechnung(): Rechnung {
   }
 }
 
-export default function FormularView({ rechnung: initialRechnung, onClear }: Props) {
+export default function FormularView({ rechnung: initialRechnung, onClear, isVisible }: Props) {
   const [r, setR] = useState<Rechnung>(initialRechnung ?? newRechnung())
   const [nrvSuffix, setNrvSuffix] = useState('')
   const [artikelListe, setArtikelListe] = useState<any[]>([])
   const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null)
+
+  useEffect(() => {
+    if (isVisible) window.api.alleArtikel().then(setArtikelListe).catch(console.error)
+  }, [isVisible])
 
   useEffect(() => {
     window.api.alleArtikel().then(setArtikelListe).catch(console.error)

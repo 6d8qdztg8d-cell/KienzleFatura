@@ -103,6 +103,7 @@ export default function App() {
             key={formKey}
             rechnung={editRechnung as any}
             onClear={handleNeueRechnung}
+            isVisible={selected === 'formular'}
           />
         </div>
         <div style={{ display: selected === 'liste' ? 'flex' : 'none', flexDirection: 'column', height: '100%' }}>
