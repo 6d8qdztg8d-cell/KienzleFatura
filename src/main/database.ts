@@ -128,8 +128,12 @@ class DatenbankService {
   suchen(q: string): Rechnung[] {
     const pat = `%${q}%`
     const rows = this.db.prepare(
-      'SELECT * FROM rechnungen WHERE kennzeichen LIKE ? OR nr_fatura LIKE ? OR faturoi LIKE ? ORDER BY erstellt DESC'
-    ).all(pat, pat, pat)
+      `SELECT * FROM rechnungen WHERE
+        kennzeichen LIKE ? OR nr_fatura LIKE ? OR nrv LIKE ? OR faturoi LIKE ? OR pagesa LIKE ?
+        OR kunde_name LIKE ? OR kunde_nui LIKE ? OR kunde_adresse LIKE ? OR kunde_stadt LIKE ?
+        OR data_fatura LIKE ?
+      ORDER BY erstellt DESC`
+    ).all(pat, pat, pat, pat, pat, pat, pat, pat, pat, pat)
     return rows.map(r => this.rowToRechnung(r))
   }
 
