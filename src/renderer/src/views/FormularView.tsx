@@ -75,6 +75,7 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
   const [nrvSuffix, setNrvSuffix] = useState('')
   const [artikelListe, setArtikelListe] = useState<any[]>([])
   const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null)
+  const [confirmFields, setConfirmFields] = useState<string[] | null>(null)
 
   useEffect(() => {
     if (isVisible) window.api.alleArtikel().then(setArtikelListe).catch(console.error)
@@ -149,7 +150,21 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
     })
   }
 
-  async function speichern() {
+  function speichern() {
+    const empty: string[] = []
+    if (!r.kennzeichen.trim()) empty.push('Targa / Kennzeichen')
+    if (!r.kundeName.trim()) empty.push('Emri i klientit')
+    if (!nrvSuffix.trim()) empty.push('NRV')
+    if (!r.positionen.some(p => p.pershkrimi.trim())) empty.push('Përshkrimi i artikullit')
+    if (empty.length > 0) {
+      setConfirmFields(empty)
+    } else {
+      doSpeichern()
+    }
+  }
+
+  async function doSpeichern() {
+    setConfirmFields(null)
     try {
       const fullNrv = 'NRV-' + nrvSuffix
       const totali = berechneTotal(r.positionen)
@@ -157,7 +172,7 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
       const newId = await window.api.speichernRechnung(toSave)
       const savedR = { ...toSave, id: newId }
       await window.api.pdfSpeichern(savedR).catch((e: any) => console.error('PDF save error:', e))
-      showToast(`Fatura u ruajt: ${r.kennzeichen}`, true)
+      showToast(`Fatura u ruajt: ${r.kennzeichen || '—'}`, true)
       onClear()
     } catch (e: any) {
       const msg = e?.message ?? String(e)
@@ -345,6 +360,38 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
           </div>
         </div>
       </div>
+
+      {confirmFields && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999
+        }}>
+          <div style={{
+            background: 'var(--card)', border: '1px solid var(--border)',
+            borderRadius: 12, padding: 24, minWidth: 340, maxWidth: 420,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
+          }}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: 'var(--text)' }}>
+              A je i sigurt?
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--text-sub)', marginBottom: 14 }}>
+              Fushat e mëposhtme janë bosh:
+            </div>
+            <ul style={{ margin: '0 0 20px 0', padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {confirmFields.map(f => (
+                <li key={f} style={{ fontSize: 13, color: 'var(--text)', fontWeight: 500 }}>{f}</li>
+              ))}
+            </ul>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 20 }}>
+              A je i sigurt që këto fusha të mbeten bosh?
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button className="btn-ghost" onClick={() => setConfirmFields(null)}>Jo, kthehu</button>
+              <button className="btn-primary" onClick={doSpeichern}>Po, ruaj</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && (
         <div className="toast">
