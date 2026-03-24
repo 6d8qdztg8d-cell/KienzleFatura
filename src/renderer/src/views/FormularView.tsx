@@ -169,9 +169,7 @@ export default function FormularView({ rechnung: initialRechnung, onSaved }: Pro
     try {
       const fullNrv = 'NRV-' + nrvSuffix
       const totali = berechneTotal(r.positionen)
-      const toSave = { ...r, nrv: fullNrv, totali }
-      const newId = await window.api.speichernRechnung(toSave)
-      await window.api.pdfDrucken({ ...toSave, id: newId })
+      await window.api.pdfDrucken({ ...r, nrv: fullNrv, totali })
     } catch (e: any) {
       console.error('Print error:', e)
       showToast('Gabim gjatë printimit!', false)
