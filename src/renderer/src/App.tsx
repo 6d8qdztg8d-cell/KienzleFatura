@@ -97,25 +97,29 @@ export default function App() {
 
         {/* Footer */}
         <div style={{ borderTop: '1px solid var(--border)', padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0.24 · ©2026 Kienzle Sh.P.K.</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0.25 · ©2026 Kienzle Sh.P.K.</div>
         </div>
       </div>
 
       {/* Content */}
       <div style={{ flex: 1, overflow: 'hidden', background: 'var(--surface)' }}>
-        {selected === 'formular' && (
+        <div style={{ display: selected === 'formular' ? 'flex' : 'none', flexDirection: 'column', height: '100%' }}>
           <FormularView
             key={formKey}
             rechnung={editRechnung as any}
             onSaved={handleSaved}
             onClear={handleNeueRechnung}
           />
-        )}
-        {selected === 'liste' && (
+        </div>
+        <div style={{ display: selected === 'liste' ? 'flex' : 'none', flexDirection: 'column', height: '100%' }}>
           <ListeView onEdit={handleEdit} />
-        )}
-        {selected === 'einstellungen' && <EinstellungenView />}
-        {selected === 'backup' && <BackupView />}
+        </div>
+        <div style={{ display: selected === 'einstellungen' ? 'flex' : 'none', flexDirection: 'column', height: '100%' }}>
+          <EinstellungenView />
+        </div>
+        <div style={{ display: selected === 'backup' ? 'flex' : 'none', flexDirection: 'column', height: '100%' }}>
+          <BackupView />
+        </div>
       </div>
     </div>
   )
