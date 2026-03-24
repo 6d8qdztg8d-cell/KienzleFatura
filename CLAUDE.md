@@ -1,120 +1,330 @@
-# KienzleFAT – Projektkontext für Claude
+# KienzleFAT – Vollständige App-Spezifikation
 
-## Was ist das Programm?
-Desktop-App für Kfz-Betrieb **Kienzle Sh.P.K.** zur Rechnungsverwaltung.
-- Rechnungen erstellen, drucken (PDF), speichern
-- Kundendaten & Artikel verwalten
-- CSV-Import von alten Rechnungen
-- Backups erstellen & wiederherstellen
-- Rechnungsnummern starten bei **1494** (alle davor wurden im alten System gemacht)
+## Zweck
+Desktop-App für den Kfz-Betrieb **Kienzle Sh.P.K.** in Ferizaj, Kosovo.
+Sprache der UI: Albanisch. Sprache der Kommentare/Commits: Deutsch/Albanisch gemischt.
+Rechnungen erstellen, als PDF drucken/speichern, Kundendaten & Artikel verwalten, Backups.
 
-## Was das Programm tut (Features)
-
-### Navigation (Sidebar)
-- **Faturë e Re** – neues Rechnungsformular (Navigation cleart NICHT die Daten)
-- **Faturat** – Liste aller gespeicherten Rechnungen
-- **Artikujt** – Artikel/Preis-Katalog verwalten
-- **Backups** – Backup erstellen, wiederherstellen, CSV importieren
-- Navigation nutzt CSS `display:none` → alle Views bleiben gemountet, Formulardaten gehen nicht verloren
-
-### Formular (FormularView)
-- Felder: Kennzeichen, Nr. Faturës (automatisch, gesperrt), NRV, Datum, Faturoi, Pagesa, Kundendaten, Positionen (Artikelliste)
-- **🗑️ Clear** – cleart das gesamte Formular und holt neue Rechnungsnummer
-- **🖨️ Printo** – druckt PDF, speichert NICHT in DB
-- **💾 Ruaj** – speichert in DB, erstellt PDF, cleart danach das Formular automatisch, bleibt auf dem Formular (navigiert NICHT zur Liste)
-- Doppelte Rechnungsnummern sind blockiert (3-fach: DB Index, Backend-Check, Frontend-Meldung)
-- **Artikel-Autofill**: Artikelnummer eingeben → Beschreibung + Preis werden automatisch ausgefüllt, Gjithsejt = Sasi × Çmimi
-- **Artikelliste wird neu geladen** sobald das Formular-Tab aktiv wird (damit neu angelegte Artikel sofort verfügbar sind)
-- Kundenname-Feld: Autocomplete aus gespeicherten Rechnungen (suchenKunden)
-
-### Rechnungsliste (ListeView)
-- Alle Rechnungen anzeigen, suchen, bearbeiten, löschen
-- **Suche durchsucht alle Felder**: Kennzeichen, Nr. Faturës, NRV, Faturoi, Pagesa, Kundenname, NUI, Adresse, Stadt, Datum
-- Wird neu geladen wenn Tab aktiv wird (`isVisible` prop)
-
-### Artikelverwaltung (EinstellungenView)
-- Artikel mit Nummer, Beschreibung, Preis speichern & wiederverwenden
-- Artikelnummer = ID → wird im Formular als Lookup-Key verwendet
-
-### Backups (BackupView)
-- Manuelles Backup als ZIP (DB + alle PDFs)
-- Backup wiederherstellen
-- CSV importieren (Semikolon-getrennt, 15 Spalten, Datum TT/MM/JJJJ)
-- **Auto-Backup**: täglich automatisch beim App-Start
-- **Max. 30 Backups** – älteste werden automatisch gelöscht
-
-## Datensicherheit
-- **WAL-Modus** aktiviert → DB überlebt Crashes & Stromausfälle
-- **synchronous = NORMAL** → maximale Sicherheit
-- **foreign_keys = ON**
-- DB liegt in `C:\Users\[Name]\AppData\Roaming\KienzleFAT\rechnungen.db`
-- Daten bleiben auch nach Programmdeinstallation erhalten
-- UNIQUE INDEX auf `nr_fatura` → keine doppelten Rechnungsnummern möglich
-- CSV-Import als Transaction → alles oder nichts
+---
 
 ## Tech Stack
-- Electron 29 + Vite + React 18 + TypeScript
-- better-sqlite3 (natives Modul – muss per `@electron/rebuild` neu gebaut werden)
-- electron-builder für Installer (NSIS, Windows x64)
-- Vercel für die Download-Webseite (`download-page.html`)
+- **Electron 29** + **Vite** + **React 18** + **TypeScript**
+- **better-sqlite3** – synchrone SQLite-DB (natives Modul, muss per `@electron/rebuild` gebaut werden)
+- **pdf-lib** – PDF-Generierung direkt im Main-Prozess
+- **adm-zip** – Backup-ZIPs erstellen/lesen
+- **electron-builder** – NSIS-Installer, Windows x64
+- Vercel für Download-Webseite (`download-page.html`)
 
-## GitHub & Build
+---
+
+## Datenmodelle
+
+### Rechnung
+```ts
+{
+  id: number              // SQLite AUTOINCREMENT (0 = neu)
+  kennzeichen: string     // Autokennzeichen, z.B. "01-302-YE"
+  nrFatura: string        // Rechnungsnummer, z.B. "1494"
+  nrv: string             // "NRV-01/0478" (immer mit Prefix "NRV-")
+  faturoi: string         // Wer hat fakturiert: "Ibrahim" | "Cufa" | "Agnesa"
+  pagesa: string          // Zahlungsart: "Bank" | "Cash"
+  dataFatura: string      // ISO-Datum Rechnungsdatum
+  pagesaDeri: string      // ISO-Datum Zahlungsfrist (Standard: +30 Tage)
+  kundeName: string
+  kundeNUI: string        // Steuernummer des Kunden
+  kundeAdresse: string
+  kundeStadt: string
+  positionen: Position[]  // als JSON in DB gespeichert
+  totali: number          // Summe OHNE TVSh (18% MwSt wird nur im UI/PDF berechnet, nicht gespeichert)
+  erstellt: string        // ISO-Timestamp
+  geaendert: string       // ISO-Timestamp
+}
+```
+
+### Position (eine Zeile in der Rechnung)
+```ts
+{
+  id: string        // temporäre Frontend-ID, wird nicht in DB gespeichert
+  cope: string      // Stückzahl (als String, Komma oder Punkt als Dezimal)
+  artikelNr: string // Artikelnummer aus dem Katalog
+  pershkrimi: string // Beschreibung
+  cmimi: string     // Preis pro Stück (als String)
+  gjithsejt: number // cope × cmimi (berechnet)
+}
+```
+
+### Artikel
+```ts
+{
+  id: string         // Artikelnummer = Primary Key, z.B. "ART-001"
+  beschreibung: string
+  preis: number      // Preis OHNE TVSh
+}
+```
+
+---
+
+## Datenbankschema (SQLite)
+
+```sql
+CREATE TABLE rechnungen (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  kennzeichen   TEXT NOT NULL DEFAULT '',
+  nr_fatura     TEXT DEFAULT '',
+  nrv           TEXT DEFAULT 'NRV-',
+  faturoi       TEXT DEFAULT 'Ibrahim',
+  pagesa        TEXT DEFAULT 'Bank',
+  data_fatura   TEXT DEFAULT '',
+  pagesa_deri   TEXT DEFAULT '',
+  kunde_name    TEXT DEFAULT '',
+  kunde_nui     TEXT DEFAULT '',
+  kunde_adresse TEXT DEFAULT '',
+  kunde_stadt   TEXT DEFAULT '',
+  positionen    TEXT DEFAULT '[]',  -- JSON Array von Position-Objekten
+  totali        REAL DEFAULT 0,
+  pdf_path      TEXT DEFAULT '',
+  erstellt      TEXT DEFAULT '',
+  geaendert     TEXT DEFAULT ''
+);
+
+CREATE UNIQUE INDEX idx_nr_fatura_unique ON rechnungen(nr_fatura)
+  WHERE nr_fatura != '';  -- Partial Index: leere Nummern erlaubt, befüllte müssen unique sein
+
+CREATE TABLE artikel (
+  nummer       TEXT PRIMARY KEY,
+  beschreibung TEXT DEFAULT '',
+  preis        REAL DEFAULT 0
+);
+```
+
+**DB-Einstellungen:** WAL-Modus, synchronous=NORMAL, foreign_keys=ON
+**DB-Pfad:** `C:\Users\[Name]\AppData\Roaming\KienzleFAT\rechnungen.db`
+**WICHTIG:** UNIQUE INDEX immer in separatem try-catch erstellen, nicht im gleichen exec()-Block wie die Tabellen.
+**WICHTIG:** SQLite String-Literale immer mit `''` (einfache Anführungszeichen). `""` = Spaltenname → "no such column" Fehler.
+
+---
+
+## Rechnungsnummern-Logik
+- Erste Rechnungsnummer: **1494** (alles davor im alten System)
+- `naechsteNrFatura()`: Liest alle `nr_fatura` aus DB, parsed als Int, nimmt Maximum, gibt `max + 1` zurück. Startwert `maxNr = 1493`.
+- Nummer wird im Frontend als gesperrtes Feld angezeigt (🔒), nicht editierbar.
+- **Duplikat-Schutz 3-fach:**
+  1. DB: UNIQUE INDEX blockiert INSERT
+  2. Backend: `speichern()` prüft mit SELECT vor INSERT, wirft `Error("DUPLICATE_NR_FATURA:1495")`
+  3. Frontend: fängt Fehler, zeigt Toast "Nr. Faturës 1495 ekziston tashmë!"
+
+---
+
+## IPC-API (window.api im Frontend)
+
+```ts
+// Rechnungen
+window.api.alleRechnungen()           // → Rechnung[]
+window.api.suchenRechnungen(q)        // → Rechnung[] (alle Felder durchsucht)
+window.api.speichernRechnung(r)       // → number (neue ID)
+window.api.loeschenRechnung(id)       // → void
+window.api.naechsteNrFatura()         // → string
+
+// Artikel
+window.api.alleArtikel()              // → Artikel[]
+window.api.speichernArtikel(a)        // → void
+window.api.loeschenArtikel(nr)        // → void
+
+// Kunden-Autocomplete
+window.api.suchenKunden(q)            // → {kundeName, kundeNUI, kundeAdresse, kundeStadt}[]
+
+// PDF
+window.api.pdfDrucken(r)             // → void (öffnet PDF in System-Viewer, SPEICHERT NICHT in DB)
+window.api.pdfSpeichern(r)           // → void (speichert PDF in pdfDir, kein DB-Eintrag)
+
+// Backup
+window.api.backupErstellen()          // → string (ZIP-Pfad)
+window.api.backupImportieren()        // → 'ok' | null (öffnet Datei-Dialog)
+window.api.backupWiederherstellen(p)  // → void
+window.api.alleBackups()             // → {name, filePath, created}[]
+window.api.backupImFinderOeffnen(p)  // → void
+window.api.csvImportieren()          // → number (Anzahl importierter Rechnungen, öffnet Datei-Dialog)
+```
+
+---
+
+## Navigation & State-Management (App.tsx)
+
+```
+Sidebar-Tabs: formular | liste | einstellungen | backup
+```
+
+**WICHTIG:** Navigation verwendet CSS `display:none` (NICHT conditional rendering).
+Alle Views bleiben permanent gemountet → Formulardaten gehen beim Tab-Wechsel NICHT verloren.
+
+```tsx
+<div style={{ display: selected === 'formular' ? 'flex' : 'none' }}>
+  <FormularView key={formKey} rechnung={editRechnung} onClear={handleNeueRechnung} isVisible={selected === 'formular'} />
+</div>
+```
+
+**formKey** – Integer, wird bei jedem `handleNeueRechnung()` inkrementiert → erzwingt Remount von FormularView → setzt Formular zurück + lädt neue Rechnungsnummer.
+
+**State in App.tsx:**
+- `selected` – aktiver Tab
+- `editRechnung` – Rechnung die bearbeitet wird (null = neue Rechnung)
+- `formKey` – erzwingt Remount
+
+**handleEdit(r):** Setzt `editRechnung`, inkrementiert `formKey`, navigiert zu 'formular'
+**handleNeueRechnung():** Setzt `editRechnung=null`, inkrementiert `formKey`, navigiert zu 'formular'
+
+---
+
+## FormularView – genaues Verhalten
+
+### Felder
+| Feld | Typ | Besonderheit |
+|------|-----|--------------|
+| Nr. Faturës | read-only Display | automatisch, 🔒-Icon, Farbe accent-hi |
+| Targa / Kennzeichen | text input | Pflichtfeld im UI-Sinne |
+| NRV | text input mit Prefix | "NRV-" ist fest vorangestellt, User tippt nur den Rest |
+| Datë Fatura | date input | Standard: heute |
+| Pagesa Deri | date input | Standard: heute + 30 Tage |
+| Faturoi | select | Optionen: Ibrahim, Cufa, Agnesa |
+| Mënyra e Pagesës | select | Optionen: Bank, Cash |
+| Emri / Name | text + Autocomplete | suchenKunden() nach früher genutzten Namen |
+| NUI | text | |
+| Adresa | text | |
+| Qyteti / Stadt | text | |
+
+### Positionen (Artikelzeilen)
+Jede Zeile: **Sasi** (Stückzahl) | **Nr. Art.** | **Përshkrimi** | **Çmimi** | **Gjithsejt** (berechnet) | ✕-Button
+
+**Artikel-Autofill:** Wenn Artikelnummer eingegeben wird → sucht in `artikelListe` → füllt Beschreibung + Preis automatisch aus → berechnet Gjithsejt = Sasi × Çmimi sofort.
+
+**artikelListe** wird geladen:
+1. Beim ersten Mount (useEffect [])
+2. Jedes Mal wenn `isVisible` true wird (damit neu angelegte Artikel sofort verfügbar sind)
+
+### Totals (nur Anzeige, nicht in DB)
+- Nën-Totali = Summe aller Gjithsejt
+- TVSh 18% = Totali × 0.18
+- TOTALI (me TVSh) = Totali × 1.18
+
+### Buttons
+- **🗑️ Clear** – ruft `onClear()` → `handleNeueRechnung()` → Remount, neue Rechnungsnummer
+- **🖨️ Printo** – ruft `pdfDrucken()`, speichert NICHT in DB, bleibt auf Formular
+- **💾 Ruaj** – speichert in DB, speichert PDF, zeigt Toast, ruft dann `onClear()` → Formular wird gecleart und neue Nummer geholt. Navigiert NICHT zur Liste.
+
+### Ruaj-Ablauf (genau)
+1. `speichernRechnung(toSave)` → bekommt neue ID
+2. `pdfSpeichern(savedR)` → PDF wird gespeichert (Fehler werden nur geloggt, nicht dem User gezeigt)
+3. Toast: "Fatura u ruajt: [Kennzeichen]" (grün, 3.5s)
+4. `onClear()` → Formular zurücksetzen
+
+### Fehlerbehandlung
+- `DUPLICATE_NR_FATURA:X` → Toast "Nr. Faturës X ekziston tashmë!" (rot)
+- Sonstiger Fehler → Toast "Gabim: [Fehlermeldung]" (rot)
+
+---
+
+## ListeView – genaues Verhalten
+
+- Lädt Rechnungen beim Mount und jedes Mal wenn `isVisible` true wird
+- Suche: Echtzeit, `suchenRechnungen(q)` bei jeder Eingabe
+- **Suche durchsucht alle Felder:** kennzeichen, nr_fatura, nrv, faturoi, pagesa, kunde_name, kunde_nui, kunde_adresse, kunde_stadt, data_fatura
+- Pro Karte: Kennzeichen (fett), Tags für Faturoi + Pagesa, Datum, Nr. Faturës, Totali rechts
+- Hover zeigt Buttons: ✏️ Bearbeiten | 🖨️ Drucken | 🗑️ Löschen
+- Löschen öffnet Bestätigungs-Dialog
+- Klick auf Karte = Bearbeiten
+
+---
+
+## EinstellungenView (Artikujt)
+
+- Artikel anlegen: Nummer (= ID), Beschreibung, Preis (ohne TVSh)
+- `INSERT OR REPLACE` → Artikel mit gleicher Nummer wird überschrieben
+- Liste zeigt alle Artikel sortiert nach Nummer
+- Löschen mit Bestätigungs-Dialog
+
+---
+
+## BackupView
+
+- **Backup erstellen:** ZIP mit `rechnungen.db` + allen PDFs aus `rechnungen_pdf/`
+  - Name: `KienzleFAT_Backup_YYYY-MM-DD_HH-MM.zip`
+  - Nach Erstellen: cleanup → max. 30 Backups (älteste werden gelöscht)
+- **Backup importieren:** Datei-Dialog → ZIP auswählen → DB wird wiederhergestellt (alte DB wird als `_vorher.db` gesichert)
+- **CSV importieren:** Datei-Dialog → Semikolon-getrennte CSV, 15 Spalten, Header-Zeile wird übersprungen
+  - Spaltenreihenfolge: nrFatura; kennzeichen; nrv; dataFatura(TT/MM/JJJJ); pagesaDeri(TT/MM/JJJJ); faturoi; pagesa; kundeName; kundeNUI; kundeAdresse; kundeStadt; cope; artikelNr; pershkrimi; cmimi
+  - Mehrere Zeilen mit gleicher nrFatura = eine Rechnung mit mehreren Positionen
+  - Gesamter Import als eine SQLite-Transaction (alles oder nichts)
+- **Auto-Backup:** Täglich beim App-Start, wenn noch kein Backup für heute existiert
+- Gespeicherte Backups: Liste mit Datum, "Im Explorer" Button, "Wiederherstellen" Button
+
+---
+
+## PDF-Layout (pdf-lib, A4)
+
+**Firma:** Kienzle Sh.P.K. | NUI: 812248773 | BpB 1304 0010 0416 0572
+Adresse: Magistralja Ferizaj-Shkup p.n., 70000 Ferizaj, Kosove
+Tel: +383 44 130 057 | tahokienzle1@gmail.com
+
+**Aufbau von oben nach unten:**
+1. Logo (links, aus `resources/logo.png`) + "Fatura" Schriftzug (rechts) + roter Balken
+2. Info-Box (rechts): Datum, Nr. Faturës, Pagesa Deri, Faturoi, Pagesa, Nr. i Targes
+3. Firmenadresse (links neben Info-Box)
+4. Trennlinie
+5. Kunden-Box (grauer Hintergrund, roter linker Streifen): Name, NUI, Adresse, Stadt
+6. Tabelle: Cope | Artikel | Përshkrimi | Çmimi per cope | Gjithsejt
+   - Abwechselnd weiß/hellgrau, mind. 5 Zeilen
+7. Totals: Nën-Totali, TVSh 18%, Gesamtbetrag (rot, fett)
+8. Footer: Nr. i Targes, NRV, Hinweistext auf Albanisch, Unterschriftenzeile
+
+**PDF speichern:** `rechnungen_pdf/[Kennzeichen].pdf`
+**PDF drucken:** In `temp/` speichern, mit `shell.openPath()` öffnen
+
+---
+
+## Fenster-Konfiguration
+- Größe: 1200×780, Minimum: 1060×700
+- `autoHideMenuBar: true`
+- Titel: "KienzleFAT – Kienzle Sh.P.K."
+
+---
+
+## GitHub & Build-Prozess
 - Repo: https://github.com/6d8qdztg8d-cell/KienzleFatura
 - Branch: main
-- Windows Build via GitHub Actions (`windows-latest`)
+- Build: GitHub Actions `windows-latest` (kein Cross-Compile von macOS möglich)
 - **Neuen Build auslösen:**
-  1. `package.json` Version updaten (z.B. 1.0.29 → 1.0.30)
-  2. Version in `src/renderer/src/App.tsx` updaten (Footer)
+  1. Version in `package.json` updaten
+  2. Version in `src/renderer/src/App.tsx` (Footer: `v1.0.X · ©2026 Kienzle Sh.P.K.`)
   3. `git add -A && git commit -m "vX.X.X" && git push origin main`
   4. `git tag vX.X.X && git push origin vX.X.X`
-- **WICHTIG**: Tag = package.json version, sonst heißt die .exe falsch!
-- GitHub Actions baut → lädt `.exe` als Release hoch → Webseite zeigt automatisch neuste Version
+  5. **WICHTIG:** Tag muss exakt = package.json version sein, sonst heißt die .exe falsch
 
 ## Installer (NSIS)
-- `electron-builder.yml`: appId = `com.kienzle.fat`, productName = `KienzleFAT`
-- `build/installer.nsh`:
-  - Beendet KienzleFAT.exe + KienzleFaktura.exe per taskkill
-  - Löscht alte Registry-Keys (com.kienzle.fat, com.kienzle.faktura, KienzleFAT, KienzleFaktura)
-  - Löscht alte Installationsordner ($PROGRAMFILES64 + $PROGRAMFILES)
-  - → Ab v1.0.15: neue .exe einfach draufklicken, kein Fehler mehr
-- `perMachine: true` → C:\Program Files\
+- `appId: com.kienzle.fat`, `productName: KienzleFAT`
+- `perMachine: true` → `C:\Program Files\`
 - `oneClick: true`
-
-## Bekannte Probleme & Fixes
-- **"Alte Anwendungsdateien konnten nicht deinstalliert werden"**: Ab v1.0.15 behoben. Falls nochmal: `uninstall-fix.bat` als Admin (auf Webseite verfügbar)
-- **"Gabim gjatë ruajtjes!"** beim Speichern: Ab v1.0.24 zeigt die Meldung den genauen Fehlertext. Ursache war DB-Initialisierungsfehler durch UNIQUE INDEX im falschen exec()-Block (behoben in v1.0.22)
-- **Doppelte Rechnungsnummer**: Zeigt "Nr. Faturës X ekziston tashmë!" – andere Nummer wählen
-- **Artikel-Autofill funktioniert nicht nach Tab-Wechsel**: Behoben in v1.0.30 – FormularView lädt Artikelliste neu wenn Tab aktiv wird (`isVisible` prop)
-- **Native Module**: `better-sqlite3` immer mit `npx @electron/rebuild -f -w better-sqlite3` neu bauen
-- **Cross-Compile**: Nicht möglich von macOS. Immer GitHub Actions verwenden.
-- **SQLite String-Literale**: Immer einfache Anführungszeichen `''` verwenden, nie `""` (doppelte = Spaltenname in SQLite → "no such column" Fehler)
+- `build/installer.nsh` (customInit):
+  - Beendet KienzleFAT.exe + KienzleFaktura.exe per taskkill
+  - Löscht Registry-Keys: com.kienzle.fat, com.kienzle.faktura, KienzleFAT, KienzleFaktura
+  - Löscht alte Installationsordner ($PROGRAMFILES64 + $PROGRAMFILES)
+  → Neue .exe draufklicken reicht, kein manuelles Deinstallieren nötig
 
 ## Wichtige Dateien
-- `package.json` – App-Version (vor jedem Build updaten)
-- `electron-builder.yml` – Installer-Konfiguration
-- `build/installer.nsh` – Custom NSIS Script (Upgrade-Logik)
+- `package.json` – Version
+- `electron-builder.yml` – Installer-Config
+- `build/installer.nsh` – NSIS Custom-Script
 - `download-page.html` – Vercel Download-Seite
-- `uninstall-fix.bat` – Reparatur-Tool (auch auf GitHub Release v1.0.14+)
-- `.github/workflows/build-release.yml` – GitHub Actions (permissions: contents: write!)
-- `src/main/database.ts` – DB-Logik, WAL, UNIQUE Index, Duplikat-Check, Suche über alle Felder
-- `src/main/backup-service.ts` – Backup, Auto-Backup, CSV-Import (Transaction)
-- `src/renderer/src/App.tsx` – Navigation, Routing, Version im Footer, isVisible Props
-- `src/renderer/src/views/FormularView.tsx` – Hauptformular, Speichern/Drucken/Clear, Artikel-Autofill
-- `src/renderer/src/views/ListeView.tsx` – Rechnungsliste, Suche (alle Felder), isVisible
+- `.github/workflows/build-release.yml` – GitHub Actions (`permissions: contents: write`)
+- `src/main/index.ts` – IPC-Handler, App-Init, autoBackup()
+- `src/main/database.ts` – DB-Klasse, alle Queries
+- `src/main/pdf-service.ts` – PDF erstellen/speichern/drucken
+- `src/main/backup-service.ts` – Backup/Restore/CSV/AutoBackup
+- `src/preload/index.ts` – window.api Definitionen
+- `src/renderer/src/App.tsx` – Navigation, formKey, isVisible-Props
+- `src/renderer/src/views/FormularView.tsx` – Hauptformular
+- `src/renderer/src/views/ListeView.tsx` – Rechnungsliste
 - `src/renderer/src/views/EinstellungenView.tsx` – Artikelverwaltung
-- `src/renderer/src/views/BackupView.tsx` – Backup/Restore/CSV
+- `src/renderer/src/views/BackupView.tsx` – Backup-UI
 
-## Versionshistorie (wichtige Änderungen)
-- v1.0.15 – Installer-Fix: keine "alte Dateien" Meldung mehr
-- v1.0.16 – Sofortige Weiterleitung nach Speichern (kein 1.5s Delay)
-- v1.0.17 – WAL-Modus, Auto-Backup täglich, max 30 Backups, CSV Transaction
-- v1.0.18 – appId auf com.kienzle.fat, Registry-Keys korrigiert
-- v1.0.19 – Rezervimi→Backups, Faktura→Fatura, Startnummer 1494, Version sichtbar
-- v1.0.20 – Doppelte Rechnungsnummern blockiert (UNIQUE INDEX + Backend + Frontend)
-- v1.0.21 – Drucken speichert nicht mehr in DB
-- v1.0.22 – DB-Init Fix: UNIQUE INDEX separat mit try-catch
-- v1.0.23 – Navigation cleart nicht mehr; Clear-Button hinzugefügt
-- v1.0.24 – Genauer Fehlertext beim Speichern sichtbar
-- v1.0.28 – Ruaj cleart Formular automatisch, navigiert nicht mehr zur Liste; onSaved entfernt
-- v1.0.29 – Suche in Faturat durchsucht alle Felder (Name, NUI, Adresse, Stadt, Datum, Pagesa, NRV)
-- v1.0.30 – Artikel-Autofill Fix: Artikelliste wird bei Tab-Wechsel neu geladen
+## Versionsstand
+Aktuelle Version: **v1.0.30**
