@@ -132,7 +132,7 @@ export async function createPDF(rechnung: Rechnung): Promise<Buffer> {
   }
   compLine('Kienzle Sh.P.K.', 'Bold')
   compLine('NUI: 812248773', '', colGray)
-  compLine('TVSH Num\xebr: 812248773', '', colGray)
+  compLine('TVSh: 812248773', '', colGray)
   compLine('BpB 1304 0010 0416 0572', '', colGray)
   cy -= 4
   compLine('Magistralja Ferizaj-Shkup p.n.')
@@ -188,9 +188,9 @@ export async function createPDF(rechnung: Rechnung): Promise<Buffer> {
   vln(pageRight, tblHdrBot, tblTop, 0.8)
 
   const hY = tblTop - 13
-  txt('cop\xeb',               tc1 + 4, hY, 8.5, 'Medium', colGray)
+  txt('Cop\xeb',               tc1 + 4, hY, 8.5, 'Medium', colGray)
   txt('Artikulli',            tc2 + 4, hY, 8.5, 'Medium', colGray)
-  txt('p\xebrshkrimi',        tc3 + 4, hY, 8.5, 'Medium', colGray)
+  txt('P\xebrshkrimi',        tc3 + 4, hY, 8.5, 'Medium', colGray)
   txt('\xc7mimi p\xebr cop\xeb', tc4 + 4, hY, 8.5, 'Medium', colGray)
   txt('Gjith\xebsejt',        tc5 + 4, hY, 8.5, 'Medium', colGray)
 
@@ -239,7 +239,7 @@ export async function createPDF(rechnung: Rechnung): Promise<Buffer> {
 
   // ── 7. FOOTER ──────────────────────────────────────────────────
   if (rechnung.kennzeichen) txt(`Nr. i Targes: ${rechnung.kennzeichen}`, margin, 148, 8.5, 'Medium')
-  txt(rechnung.nrv, margin, 135, 8.5)
+  if (rechnung.nrv && rechnung.nrv !== 'NRV-') txt(rechnung.nrv, margin, 135, 8.5)
   hln(124, margin, pageRight, 0.6)
   txt('Ju lutemi pagesa duhet te behet brenda 30 dite nga data e l\xebshimit te fatur\xebs.', margin, 110, 8, '', colGray)
   txt('Ju faleminderit per mirkuptim.', margin, 98, 8, '', colGray)

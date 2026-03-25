@@ -33,7 +33,7 @@ interface Props {
 }
 
 const FATUROIS = ['Ibrahim', 'Cufa', 'Agnesa']
-const ZAHLUNGSARTEN = ['Bank', 'Cash']
+const ZAHLUNGSARTEN = ['Bank', 'para t\xeb gatshme']
 
 function toInputDate(iso: string): string {
   try { return new Date(iso).toISOString().slice(0, 10) } catch { return '' }
