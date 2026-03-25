@@ -132,7 +132,7 @@ export async function createPDF(rechnung: Rechnung): Promise<Buffer> {
   }
   compLine('Kienzle Sh.P.K.', 'Bold')
   compLine('NUI: 812248773', '', colGray)
-  compLine('TVSh: 812248773', '', colGray)
+  compLine('TVSh: 330675358', '', colGray)
   compLine('BpB 1304 0010 0416 0572', '', colGray)
   cy -= 4
   compLine('Magistralja Ferizaj-Shkup p.n.')
