@@ -207,6 +207,26 @@ class DatenbankService {
     this.db.prepare('DELETE FROM artikel WHERE nummer=?').run(nummer)
   }
 
+  rechnungenFiltern(kundeName: string, vonDatum: string, bisDatum: string): Rechnung[] {
+    const conditions: string[] = []
+    const params: any[] = []
+    if (kundeName && kundeName.trim()) {
+      conditions.push('kunde_name LIKE ?')
+      params.push(`%${kundeName.trim()}%`)
+    }
+    if (vonDatum) {
+      conditions.push("SUBSTR(data_fatura, 1, 10) >= ?")
+      params.push(vonDatum)
+    }
+    if (bisDatum) {
+      conditions.push("SUBSTR(data_fatura, 1, 10) <= ?")
+      params.push(bisDatum)
+    }
+    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+    const rows = this.db.prepare(`SELECT * FROM rechnungen ${where} ORDER BY data_fatura ASC`).all(...params)
+    return rows.map(r => this.rowToRechnung(r))
+  }
+
   suchenKunden(q: string): { kundeName: string; kundeNUI: string; kundeAdresse: string; kundeStadt: string }[] {
     if (!q || q.trim().length === 0) return []
     const pat = `%${q}%`

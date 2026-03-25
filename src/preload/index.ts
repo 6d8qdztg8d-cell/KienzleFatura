@@ -23,6 +23,7 @@ const api = {
   backupErstellen: () => ipcRenderer.invoke('backup:erstellen'),
   backupImportieren: () => ipcRenderer.invoke('backup:importieren'),
   csvImportieren: () => ipcRenderer.invoke('backup:csvImportieren'),
+  csvExportieren: (filter: { kundeName: string; vonDatum: string; bisDatum: string }) => ipcRenderer.invoke('backup:csvExportieren', filter),
   alleBackups: () => ipcRenderer.invoke('backup:alleBackups'),
   backupWiederherstellen: (filePath: string) => ipcRenderer.invoke('backup:wiederherstellen', filePath),
   backupImFinderOeffnen: (filePath: string) => ipcRenderer.invoke('backup:imFinderOeffnen', filePath),

@@ -162,6 +162,31 @@ export function csvImportieren(csvPath: string): number {
   return anzahl
 }
 
+export function csvExportieren(filter: { kundeName: string; vonDatum: string; bisDatum: string }): { csv: string; count: number } {
+  const rechnungen = db.rechnungenFiltern(filter.kundeName, filter.vonDatum, filter.bisDatum)
+
+  const formatDate = (iso: string): string => {
+    const d = iso ? iso.substring(0, 10) : ''
+    const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : d
+  }
+
+  const lines: string[] = []
+  lines.push('nrFatura;kennzeichen;nrv;dataFatura;pagesaDeri;faturoi;pagesa;kundeName;kundeNUI;kundeAdresse;kundeStadt;cope;artikelNr;pershkrimi;cmimi')
+
+  for (const r of rechnungen) {
+    if (r.positionen.length === 0) {
+      lines.push([r.nrFatura, r.kennzeichen, r.nrv, formatDate(r.dataFatura), formatDate(r.pagesaDeri), r.faturoi, r.pagesa, r.kundeName, r.kundeNUI, r.kundeAdresse, r.kundeStadt, '', '', '', ''].join(';'))
+    } else {
+      for (const pos of r.positionen) {
+        lines.push([r.nrFatura, r.kennzeichen, r.nrv, formatDate(r.dataFatura), formatDate(r.pagesaDeri), r.faturoi, r.pagesa, r.kundeName, r.kundeNUI, r.kundeAdresse, r.kundeStadt, pos.cope, pos.artikelNr, pos.pershkrimi, pos.cmimi].join(';'))
+      }
+    }
+  }
+
+  return { csv: lines.join('\r\n'), count: rechnungen.length }
+}
+
 function parseDate(s: string): string {
   // format dd/MM/yyyy → ISO string
   const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)

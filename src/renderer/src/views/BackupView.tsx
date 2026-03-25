@@ -6,10 +6,31 @@ interface BackupEntry {
   created: string
 }
 
+interface ExportFilter {
+  kundeName: string
+  vonDatum: string
+  bisDatum: string
+}
+
+function todayStr() {
+  return new Date().toISOString().substring(0, 10)
+}
+
+function firstOfMonthStr() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+}
+
 export default function BackupView() {
   const [backups, setBackups] = useState<BackupEntry[]>([])
   const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null)
   const [loading, setLoading] = useState('')
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [exportFilter, setExportFilter] = useState<ExportFilter>({
+    kundeName: '',
+    vonDatum: firstOfMonthStr(),
+    bisDatum: todayStr()
+  })
 
   async function laden() {
     const data = await window.api.alleBackups()
@@ -54,6 +75,21 @@ export default function BackupView() {
     } finally { setLoading('') }
   }
 
+  async function csvExportieren() {
+    setLoading('csvexport')
+    setShowExportModal(false)
+    try {
+      const result = await window.api.csvExportieren(exportFilter)
+      if (result.saved) {
+        showToast(`${result.count} Rechnung(en) eksportiert!`, true)
+      } else if (result.count === 0) {
+        showToast('Nuk u gjet asnjë faturë për filtrin e zgjedhur.', false)
+      }
+    } catch (e: any) {
+      showToast(`Fehler: ${e.message}`, false)
+    } finally { setLoading('') }
+  }
+
   async function wiederherstellen(filePath: string) {
     try {
       await window.api.backupWiederherstellen(filePath)
@@ -78,7 +114,7 @@ export default function BackupView() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 900 }}>
 
           {/* Action cards */}
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <AktionKarte
               icon="⬆️"
               titel="Backup erstellen"
@@ -102,6 +138,14 @@ export default function BackupView() {
               farbe="var(--green)"
               loading={loading === 'csv'}
               onClick={csvImportieren}
+            />
+            <AktionKarte
+              icon="📤"
+              titel="CSV eksportieren"
+              sub="Fatura në CSV sipas filtrit"
+              farbe="var(--accent-hi)"
+              loading={loading === 'csvexport'}
+              onClick={() => setShowExportModal(true)}
             />
           </div>
 
@@ -130,6 +174,83 @@ export default function BackupView() {
           </div>
         </div>
       </div>
+
+      {/* CSV Export Modal */}
+      {showExportModal && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+          }}
+          onClick={() => setShowExportModal(false)}
+        >
+          <div
+            style={{
+              background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12,
+              padding: 28, width: 420, boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>
+              📤 CSV Eksportim
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-sub)', marginBottom: 20 }}>
+              Lëre fushën "Klienti" bosh për të eksportuar të gjitha faturat.
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, color: 'var(--text-sub)', marginBottom: 5 }}>
+                  Klienti <span style={{ color: 'var(--text-muted)' }}>(opsionale)</span>
+                </label>
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="p.sh. Petrit Gashi"
+                  value={exportFilter.kundeName}
+                  onChange={e => setExportFilter(f => ({ ...f, kundeName: e.target.value }))}
+                  style={{ width: '100%', boxSizing: 'border-box' }}
+                  autoFocus
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: 'var(--text-sub)', marginBottom: 5 }}>
+                    Nga data
+                  </label>
+                  <input
+                    className="input"
+                    type="date"
+                    value={exportFilter.vonDatum}
+                    onChange={e => setExportFilter(f => ({ ...f, vonDatum: e.target.value }))}
+                    style={{ width: '100%', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: 'var(--text-sub)', marginBottom: 5 }}>
+                    Deri më datë
+                  </label>
+                  <input
+                    className="input"
+                    type="date"
+                    value={exportFilter.bisDatum}
+                    onChange={e => setExportFilter(f => ({ ...f, bisDatum: e.target.value }))}
+                    style={{ width: '100%', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, marginTop: 24, justifyContent: 'flex-end' }}>
+              <button className="btn-ghost" onClick={() => setShowExportModal(false)}>Anulo</button>
+              <button className="btn-primary" onClick={csvExportieren}>
+                📤 Eksporto CSV
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && (
         <div className="toast">

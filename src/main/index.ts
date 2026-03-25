@@ -1,11 +1,12 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
+import * as fs from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { db } from './database'
 import { pdfDrucken, pdfSpeichern } from './pdf-service'
 import {
   backupErstellen, backupWiederherstellen, alleBackups,
-  backupImFinderOeffnen, csvImportieren, autoBackup
+  backupImFinderOeffnen, csvImportieren, csvExportieren, autoBackup
 } from './backup-service'
 
 function createWindow(): void {
@@ -110,6 +111,21 @@ app.whenReady().then(() => {
     if (result.canceled || !result.filePaths.length) return null
     try { return csvImportieren(result.filePaths[0]) }
     catch (e) { console.error(e); throw e }
+  })
+
+  ipcMain.handle('backup:csvExportieren', async (event, filter: { kundeName: string; vonDatum: string; bisDatum: string }) => {
+    const win = BrowserWindow.fromWebContents(event.sender)!
+    const { csv, count } = csvExportieren(filter)
+    if (count === 0) return { count: 0, saved: false }
+    const today = new Date().toISOString().substring(0, 10)
+    const result = await dialog.showSaveDialog(win, {
+      title: 'CSV-Export speichern',
+      defaultPath: `KienzleFAT_Export_${today}.csv`,
+      filters: [{ name: 'CSV', extensions: ['csv'] }]
+    })
+    if (result.canceled || !result.filePath) return { count, saved: false }
+    fs.writeFileSync(result.filePath, '\ufeff' + csv, 'utf8')
+    return { count, saved: true }
   })
 
   ipcMain.handle('backup:alleBackups', () => {
