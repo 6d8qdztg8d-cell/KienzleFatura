@@ -274,7 +274,7 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
                       border: `1.5px solid ${kennzeichenLocked ? 'var(--green)' : 'var(--red)'}`,
                       color: kennzeichenLocked ? 'var(--green)' : 'var(--red)'
                     }}
-                  >{kennzeichenLocked ? '🔒' : '🔓'}</button>
+                  >{kennzeichenLocked ? '🔓' : '🔒'}</button>
                 </div>
               </div>
 
@@ -306,7 +306,7 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
                       border: `1.5px solid ${nrvLocked ? 'var(--green)' : 'var(--red)'}`,
                       color: nrvLocked ? 'var(--green)' : 'var(--red)'
                     }}
-                  >{nrvLocked ? '🔒' : '🔓'}</button>
+                  >{nrvLocked ? '🔓' : '🔒'}</button>
                 </div>
               </div>
 
