@@ -268,8 +268,6 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
                 onChange={v => updateField('dataFatura', fromInputDate(v))} />
               <DateField label="Pagesa Deri" value={toInputDate(r.pagesaDeri)}
                 onChange={v => updateField('pagesaDeri', fromInputDate(v))} />
-              <SelectField label="Faturoi" options={FATUROIS} value={r.faturoi}
-                onChange={v => updateField('faturoi', v)} />
               <SelectField label="Mënyra e Pagesës" options={ZAHLUNGSARTEN} value={r.pagesa}
                 onChange={v => updateField('pagesa', v)} />
             </div>

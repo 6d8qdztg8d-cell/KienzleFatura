@@ -100,7 +100,7 @@ export async function createPDF(rechnung: Rechnung): Promise<Buffer> {
   const blockTop = barY - secGap
 
   const ibLeft  = 358, ibRight = pageRight
-  const ibRowH  = 15,  ibRows  = 6
+  const ibRowH  = 15,  ibRows  = 4
   const ibH     = ibRows * ibRowH + 2 * innerPad
   const ibTop   = blockTop
   const ibBottom = ibTop - ibH
@@ -120,11 +120,9 @@ export async function createPDF(rechnung: Rechnung): Promise<Buffer> {
   }
 
   infoRow('Data:',            fmtDate(rechnung.dataFatura))
-  infoRow('Nr.i Fatures:',   rechnung.nrFatura)
-  infoRow('Pagesa deri me:', fmtDate(rechnung.pagesaDeri))
-  infoRow('Faturoi:',         rechnung.faturoi)
+  infoRow('Nr.i Fatur\xebs:', rechnung.nrFatura)
+  infoRow('Pagesa deri m\xeb:', fmtDate(rechnung.pagesaDeri))
   infoRow('Pagesa:',          rechnung.pagesa)
-  infoRow('Nr. i Targes:',   rechnung.kennzeichen)
 
   // Firmen-Adresse (links)
   const compLineH = 12
@@ -134,6 +132,7 @@ export async function createPDF(rechnung: Rechnung): Promise<Buffer> {
   }
   compLine('Kienzle Sh.P.K.', 'Bold')
   compLine('NUI: 812248773', '', colGray)
+  compLine('TVSH Num\xebr: 812248773', '', colGray)
   compLine('BpB 1304 0010 0416 0572', '', colGray)
   cy -= 4
   compLine('Magistralja Ferizaj-Shkup p.n.')
@@ -157,7 +156,7 @@ export async function createPDF(rechnung: Rechnung): Promise<Buffer> {
   fill(margin, custBottom, 3, custHeight, colRed)
   box(margin, custBottom, custRight - margin, custHeight, colBorder, 0.5)
 
-  txt('Fatura leshohet per:', margin + 10, custTop - 11, 7.5, 'Medium', colGray)
+  txt('Fatura l\xebshohet p\xebr:', margin + 10, custTop - 11, 7.5, 'Medium', colGray)
 
   let custY = custTop - 23
   function custLine(t: string, weight = '') {
@@ -189,11 +188,11 @@ export async function createPDF(rechnung: Rechnung): Promise<Buffer> {
   vln(pageRight, tblHdrBot, tblTop, 0.8)
 
   const hY = tblTop - 13
-  txt('Cope',             tc1 + 4, hY, 8.5, 'Medium', colGray)
-  txt('Artikel',          tc2 + 4, hY, 8.5, 'Medium', colGray)
-  txt('Pershkrimi',       tc3 + 4, hY, 8.5, 'Medium', colGray)
-  txt('Cmimi per cope',   tc4 + 4, hY, 8.5, 'Medium', colGray)
-  txt('Gjithsejt',        tc5 + 4, hY, 8.5, 'Medium', colGray)
+  txt('cop\xeb',               tc1 + 4, hY, 8.5, 'Medium', colGray)
+  txt('Artikulli',            tc2 + 4, hY, 8.5, 'Medium', colGray)
+  txt('p\xebrshkrimi',        tc3 + 4, hY, 8.5, 'Medium', colGray)
+  txt('\xc7mimi p\xebr cop\xeb', tc4 + 4, hY, 8.5, 'Medium', colGray)
+  txt('Gjith\xebsejt',        tc5 + 4, hY, 8.5, 'Medium', colGray)
 
   const rowH    = 20
   const minRows = 5
@@ -223,7 +222,7 @@ export async function createPDF(rechnung: Rechnung): Promise<Buffer> {
   // ── 6. TOTALS ──────────────────────────────────────────────────
   let totY = rowY - secGap * 0.75
 
-  txt('Nen-Totali (pa TVSh)', tc4 + 5, totY, 8.5, '', colGray)
+  txt('\xc7mimi (pa TVSh)', tc4 + 5, totY, 8.5, '', colGray)
   txtR(`${rechnung.totali.toFixed(2)} EUR`, pageRight - 5, totY)
 
   totY -= 13
@@ -235,14 +234,14 @@ export async function createPDF(rechnung: Rechnung): Promise<Buffer> {
   const totalBrutto = rechnung.totali * 1.18
   fill(tc3, totY - 3, pageRight - tc3, 17, colLightBg)
   box(tc3,  totY - 3, pageRight - tc3, 17, colBorder, 0.5)
-  txt('Shuma e detyreshme per pagese', tc3 + 5, totY, 8.5, 'Medium')
+  txt('Totali', tc3 + 5, totY, 8.5, 'Medium')
   txtR(`${totalBrutto.toFixed(2)} EUR`, pageRight - 6, totY, 9, 'Bold', colRed)
 
   // ── 7. FOOTER ──────────────────────────────────────────────────
-  txt(`Nr. i Targes: ${rechnung.kennzeichen}`, margin, 148, 8.5, 'Medium')
+  if (rechnung.kennzeichen) txt(`Nr. i Targes: ${rechnung.kennzeichen}`, margin, 148, 8.5, 'Medium')
   txt(rechnung.nrv, margin, 135, 8.5)
   hln(124, margin, pageRight, 0.6)
-  txt('Ju lutemi pagesa duhet te behet brenda 30 dite nga data e leshimit te Fatures.', margin, 110, 8, '', colGray)
+  txt('Ju lutemi pagesa duhet te behet brenda 30 dite nga data e l\xebshimit te fatur\xebs.', margin, 110, 8, '', colGray)
   txt('Ju faleminderit per mirkuptim.', margin, 98, 8, '', colGray)
   txt('Klienti: ..............................', 338, 78)
 
