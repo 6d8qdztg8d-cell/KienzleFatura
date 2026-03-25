@@ -243,7 +243,7 @@ export async function createPDF(rechnung: Rechnung): Promise<Buffer> {
   hln(124, margin, pageRight, 0.6)
   txt('Ju lutemi pagesa duhet te behet brenda 30 dite nga data e l\xebshimit te fatur\xebs.', margin, 110, 8, '', colGray)
   txt('Ju faleminderit per mirkuptim.', margin, 98, 8, '', colGray)
-  txt('Klienti: ..............................', 338, 78)
+  txt('Klienti: ..............................', 390, 58)
 
   const pdfBytes = await pdfDoc.save()
   return Buffer.from(pdfBytes)
