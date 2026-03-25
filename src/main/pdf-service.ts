@@ -163,10 +163,10 @@ export async function createPDF(rechnung: Rechnung): Promise<Buffer> {
     if (!t) return
     txt(t, margin + 10, custY, 9, weight); custY -= 13
   }
-  custLine(rechnung.kundeName, 'Bold')
-  if (rechnung.kundeNUI) custLine(`NUI ${rechnung.kundeNUI}`)
-  custLine(rechnung.kundeAdresse)
-  custLine(rechnung.kundeStadt)
+  custLine(rechnung.emriKlientit, 'Bold')
+  if (rechnung.nuiKlientit) custLine(`NUI ${rechnung.nuiKlientit}`)
+  custLine(rechnung.adresaKlientit)
+  custLine(rechnung.qytetiKlientit)
 
   // ── 5. TABELLE ─────────────────────────────────────────────────
   const tc1 = margin,       tc2 = margin + 38
@@ -198,7 +198,7 @@ export async function createPDF(rechnung: Rechnung): Promise<Buffer> {
   const minRows = 5
   let rowY      = tblHdrBot
 
-  const filledPos = rechnung.positionen.filter(p => p.pershkrimi)
+  const filledPos = rechnung.pozicionet.filter(p => p.pershkrimi)
 
   for (let i = 0; i < filledPos.length; i++) {
     const pos = filledPos[i]
@@ -238,7 +238,7 @@ export async function createPDF(rechnung: Rechnung): Promise<Buffer> {
   txtR(`${totalBrutto.toFixed(2)} EUR`, pageRight - 6, totY, 9, 'Bold', colRed)
 
   // ── 7. FOOTER ──────────────────────────────────────────────────
-  if (rechnung.kennzeichen) txt(`Nr. i Targes: ${rechnung.kennzeichen}`, margin, 148, 8.5, 'Medium')
+  if (rechnung.targa) txt(`Nr. i Targes: ${rechnung.targa}`, margin, 148, 8.5, 'Medium')
   if (rechnung.nrv && rechnung.nrv !== 'NRV-') txt(rechnung.nrv, margin, 135, 8.5)
   hln(124, margin, pageRight, 0.6)
   txt('Ju lutemi pagesa duhet te behet brenda 30 dite nga data e l\xebshimit te fatur\xebs.', margin, 110, 8, '', colGray)
@@ -251,7 +251,7 @@ export async function createPDF(rechnung: Rechnung): Promise<Buffer> {
 
 export async function pdfSpeichern(rechnung: Rechnung, pdfDir: string): Promise<string> {
   const data  = await createPDF(rechnung)
-  const name  = (rechnung.kennzeichen || `fatura_${rechnung.id}`).replace(/[/\\]/g, '-')
+  const name  = (rechnung.targa || `fatura_${rechnung.id}`).replace(/[/\\]/g, '-')
   const fPath = path.join(pdfDir, `${name}.pdf`)
   fs.writeFileSync(fPath, data)
   return fPath
