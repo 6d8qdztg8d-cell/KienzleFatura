@@ -76,6 +76,8 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
   const [artikelListe, setArtikelListe] = useState<any[]>([])
   const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null)
   const [confirmFields, setConfirmFields] = useState<string[] | null>(null)
+  const [kennzeichenLocked, setKennzeichenLocked] = useState(true)
+  const [nrvLocked, setNrvLocked] = useState(true)
 
   useEffect(() => {
     if (isVisible) window.api.alleArtikel().then(setArtikelListe).catch(console.error)
@@ -170,8 +172,12 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
       const totali = berechneTotal(r.positionen)
       const toSave = { ...r, nrv: fullNrv, totali }
       const newId = await window.api.speichernRechnung(toSave)
-      const savedR = { ...toSave, id: newId }
-      await window.api.pdfSpeichern(savedR).catch((e: any) => console.error('PDF save error:', e))
+      const pdfR = {
+        ...toSave, id: newId,
+        nrv: nrvLocked ? fullNrv : 'NRV-',
+        kennzeichen: kennzeichenLocked ? r.kennzeichen : ''
+      }
+      await window.api.pdfSpeichern(pdfR).catch((e: any) => console.error('PDF save error:', e))
       showToast(`Fatura u ruajt: ${r.kennzeichen || '—'}`, true)
       onClear()
     } catch (e: any) {
@@ -189,7 +195,12 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
     try {
       const fullNrv = 'NRV-' + nrvSuffix
       const totali = berechneTotal(r.positionen)
-      await window.api.pdfDrucken({ ...r, nrv: fullNrv, totali })
+      await window.api.pdfDrucken({
+        ...r,
+        nrv: nrvLocked ? fullNrv : 'NRV-',
+        kennzeichen: kennzeichenLocked ? r.kennzeichen : '',
+        totali
+      })
     } catch (e: any) {
       console.error('Print error:', e)
       showToast('Gabim gjatë printimit!', false)
@@ -243,24 +254,59 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
                 </div>
               </div>
 
-              <Field label="Targa / Kennzeichen" placeholder="01-302-YE" value={r.kennzeichen}
-                onChange={v => updateField('kennzeichen', v)} />
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-sub)', marginBottom: 5 }}>Targa / Kennzeichen</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <input
+                    className="premium-field"
+                    style={{ flex: 1, opacity: kennzeichenLocked ? 1 : 0.4 }}
+                    placeholder="01-302-YE"
+                    value={r.kennzeichen}
+                    disabled={!kennzeichenLocked}
+                    onChange={e => updateField('kennzeichen', e.target.value)}
+                  />
+                  <button
+                    onClick={() => setKennzeichenLocked(v => !v)}
+                    title={kennzeichenLocked ? 'Fshi nga PDF' : 'Shto në PDF'}
+                    style={{
+                      background: 'none', flexShrink: 0, cursor: 'pointer', fontSize: 13,
+                      padding: '5px 7px', lineHeight: 1, borderRadius: 6,
+                      border: `1.5px solid ${kennzeichenLocked ? 'var(--green)' : 'var(--red)'}`,
+                      color: kennzeichenLocked ? 'var(--green)' : 'var(--red)'
+                    }}
+                  >{kennzeichenLocked ? '🔒' : '🔓'}</button>
+                </div>
+              </div>
 
               {/* NRV */}
               <div>
                 <div style={{ fontSize: 11, color: 'var(--text-sub)', marginBottom: 5 }}>NRV – Numri Rendor i Verifikimit</div>
-                <div style={{
-                  display: 'flex', alignItems: 'center',
-                  background: 'var(--input)', border: '1.5px solid var(--border)', borderRadius: 7
-                }}>
-                  <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700, fontSize: 13, color: 'var(--accent)', paddingLeft: 11, flexShrink: 0 }}>NRV-</span>
-                  <input
-                    className="premium-field"
-                    style={{ border: 'none', background: 'transparent', flex: 1 }}
-                    placeholder="01/0478"
-                    value={nrvSuffix}
-                    onChange={e => setNrvSuffix(e.target.value)}
-                  />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', flex: 1,
+                    background: 'var(--input)', border: '1.5px solid var(--border)', borderRadius: 7,
+                    opacity: nrvLocked ? 1 : 0.4
+                  }}>
+                    <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700, fontSize: 13, color: 'var(--accent)', paddingLeft: 11, flexShrink: 0 }}>NRV-</span>
+                    <input
+                      className="premium-field"
+                      style={{ border: 'none', background: 'transparent', flex: 1 }}
+                      placeholder="01/0478"
+                      value={nrvSuffix}
+                      disabled={!nrvLocked}
+                      onChange={e => setNrvSuffix(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    onClick={() => setNrvLocked(v => !v)}
+                    title={nrvLocked ? 'Fshi nga PDF' : 'Shto në PDF'}
+                    style={{
+                      background: 'none', flexShrink: 0, cursor: 'pointer', fontSize: 13,
+                      padding: '5px 7px', lineHeight: 1, borderRadius: 6,
+                      border: `1.5px solid ${nrvLocked ? 'var(--green)' : 'var(--red)'}`,
+                      color: nrvLocked ? 'var(--green)' : 'var(--red)'
+                    }}
+                  >{nrvLocked ? '🔒' : '🔓'}</button>
                 </div>
               </div>
 

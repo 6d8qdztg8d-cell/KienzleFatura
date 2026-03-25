@@ -92,7 +92,7 @@ export default function App() {
 
         {/* Footer */}
         <div style={{ borderTop: '1px solid var(--border)', padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0.34 · ©2026 Kienzle Sh.P.K.</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0.35 · ©2026 Kienzle Sh.P.K.</div>
         </div>
       </div>
 
