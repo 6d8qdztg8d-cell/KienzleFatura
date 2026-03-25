@@ -33,12 +33,10 @@ export function backupErstellen(): string {
 
   const zip = new AdmZip()
 
-  // DB hinzufügen
   if (fs.existsSync(db.dbPath)) {
     zip.addLocalFile(db.dbPath, '', 'rechnungen.db')
   }
 
-  // PDFs hinzufügen
   if (fs.existsSync(db.pdfDir)) {
     const files = fs.readdirSync(db.pdfDir)
     for (const file of files) {
@@ -60,7 +58,6 @@ export function backupWiederherstellen(zipPath: string): void {
 
   const dbEntry = entries.find(e => e.entryName === 'rechnungen.db' || e.name === 'rechnungen.db')
   if (dbEntry) {
-    // Old DB backup
     const backupOld = db.dbPath.replace('.db', '_vorher.db')
     if (fs.existsSync(db.dbPath)) {
       try { fs.copyFileSync(db.dbPath, backupOld) } catch {}
@@ -88,6 +85,31 @@ export function backupImFinderOeffnen(filePath: string): void {
 
 function trim(s: string) { return s.trim() }
 
+export function csvExportieren(filter: { emriKlientit: string; vonDatum: string; bisDatum: string }): { csv: string; count: number } {
+  const faturat = db.rechnungenFiltern(filter.emriKlientit, filter.vonDatum, filter.bisDatum)
+
+  const formatDate = (iso: string): string => {
+    const d = iso ? iso.substring(0, 10) : ''
+    const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : d
+  }
+
+  const lines: string[] = []
+  lines.push('nrFatura;targa;nrv;dataFatura;pagesaDeri;faturoi;pagesa;emriKlientit;nuiKlientit;adresaKlientit;qytetiKlientit;cope;artikelNr;pershkrimi;cmimi')
+
+  for (const r of faturat) {
+    if (r.pozicionet.length === 0) {
+      lines.push([r.nrFatura, r.targa, r.nrv, formatDate(r.dataFatura), formatDate(r.pagesaDeri), r.faturoi, r.pagesa, r.emriKlientit, r.nuiKlientit, r.adresaKlientit, r.qytetiKlientit, '', '', '', ''].join(';'))
+    } else {
+      for (const pos of r.pozicionet) {
+        lines.push([r.nrFatura, r.targa, r.nrv, formatDate(r.dataFatura), formatDate(r.pagesaDeri), r.faturoi, r.pagesa, r.emriKlientit, r.nuiKlientit, r.adresaKlientit, r.qytetiKlientit, pos.cope, pos.artikelNr, pos.pershkrimi, pos.cmimi].join(';'))
+      }
+    }
+  }
+
+  return { csv: lines.join('\r\n'), count: faturat.length }
+}
+
 export function csvImportieren(csvPath: string): number {
   const raw = fs.readFileSync(csvPath, 'utf8')
   const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0)
@@ -98,37 +120,37 @@ export function csvImportieren(csvPath: string): number {
 
   const dataLines = lines.slice(1)
 
-  const gruppen: Map<string, { rechnung: Partial<Rechnung>; positionen: Position[] }> = new Map()
+  const gruppen: Map<string, { rechnung: Partial<Rechnung>; pozicionet: Position[] }> = new Map()
   const reihenfolge: string[] = []
 
   for (const line of dataLines) {
     const cols = line.split(';')
     if (cols.length < 15) continue
 
-    const nrFatura     = trim(cols[0])
-    const kennzeichen  = trim(cols[1])
-    const nrv          = trim(cols[2])
-    const dataFatura   = parseDate(trim(cols[3]))
-    const pagesaDeri   = parseDate(trim(cols[4]))
-    const faturoi      = trim(cols[5])
-    const pagesa       = trim(cols[6])
-    const kundeName    = trim(cols[7])
-    const kundeNUI     = trim(cols[8])
-    const kundeAdresse = trim(cols[9])
-    const kundeStadt   = trim(cols[10])
-    const cope         = trim(cols[11])
-    const artikelNr    = trim(cols[12])
-    const pershkrimi   = trim(cols[13])
-    const cmimi        = trim(cols[14])
+    const nrFatura      = trim(cols[0])
+    const targa         = trim(cols[1])
+    const nrv           = trim(cols[2])
+    const dataFatura    = parseDate(trim(cols[3]))
+    const pagesaDeri    = parseDate(trim(cols[4]))
+    const faturoi       = trim(cols[5])
+    const pagesa        = trim(cols[6])
+    const emriKlientit  = trim(cols[7])
+    const nuiKlientit   = trim(cols[8])
+    const adresaKlientit = trim(cols[9])
+    const qytetiKlientit = trim(cols[10])
+    const cope          = trim(cols[11])
+    const artikelNr     = trim(cols[12])
+    const pershkrimi    = trim(cols[13])
+    const cmimi         = trim(cols[14])
 
     if (!gruppen.has(nrFatura)) {
       gruppen.set(nrFatura, {
         rechnung: {
-          id: 0, kennzeichen, nrFatura, nrv, faturoi, pagesa,
-          dataFatura, pagesaDeri, kundeName, kundeNUI, kundeAdresse, kundeStadt,
+          id: 0, targa, nrFatura, nrv, faturoi, pagesa,
+          dataFatura, pagesaDeri, emriKlientit, nuiKlientit, adresaKlientit, qytetiKlientit,
           totali: 0
         },
-        positionen: []
+        pozicionet: []
       })
       reihenfolge.push(nrFatura)
     }
@@ -141,7 +163,7 @@ export function csvImportieren(csvPath: string): number {
         cope, artikelNr, pershkrimi, cmimi,
         gjithsejt: anz * prs
       }
-      gruppen.get(nrFatura)!.positionen.push(pos)
+      gruppen.get(nrFatura)!.pozicionet.push(pos)
     }
   }
 
@@ -150,10 +172,10 @@ export function csvImportieren(csvPath: string): number {
     for (const nr of reihenfolge) {
       const entry = gruppen.get(nr)
       if (!entry) continue
-      entry.rechnung.positionen = entry.positionen.length > 0 ? entry.positionen : [{
+      entry.rechnung.pozicionet = entry.pozicionet.length > 0 ? entry.pozicionet : [{
         id: `empty-${Date.now()}`, cope: '', artikelNr: '', pershkrimi: '', cmimi: '', gjithsejt: 0
       }]
-      entry.rechnung.totali = entry.rechnung.positionen.reduce((s, p) => s + p.gjithsejt, 0)
+      entry.rechnung.totali = entry.rechnung.pozicionet!.reduce((s, p) => s + p.gjithsejt, 0)
       db.speichern(entry.rechnung as Rechnung)
       anzahl++
     }
@@ -162,33 +184,7 @@ export function csvImportieren(csvPath: string): number {
   return anzahl
 }
 
-export function csvExportieren(filter: { kundeName: string; vonDatum: string; bisDatum: string }): { csv: string; count: number } {
-  const rechnungen = db.rechnungenFiltern(filter.kundeName, filter.vonDatum, filter.bisDatum)
-
-  const formatDate = (iso: string): string => {
-    const d = iso ? iso.substring(0, 10) : ''
-    const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/)
-    return m ? `${m[3]}/${m[2]}/${m[1]}` : d
-  }
-
-  const lines: string[] = []
-  lines.push('nrFatura;kennzeichen;nrv;dataFatura;pagesaDeri;faturoi;pagesa;kundeName;kundeNUI;kundeAdresse;kundeStadt;cope;artikelNr;pershkrimi;cmimi')
-
-  for (const r of rechnungen) {
-    if (r.positionen.length === 0) {
-      lines.push([r.nrFatura, r.kennzeichen, r.nrv, formatDate(r.dataFatura), formatDate(r.pagesaDeri), r.faturoi, r.pagesa, r.kundeName, r.kundeNUI, r.kundeAdresse, r.kundeStadt, '', '', '', ''].join(';'))
-    } else {
-      for (const pos of r.positionen) {
-        lines.push([r.nrFatura, r.kennzeichen, r.nrv, formatDate(r.dataFatura), formatDate(r.pagesaDeri), r.faturoi, r.pagesa, r.kundeName, r.kundeNUI, r.kundeAdresse, r.kundeStadt, pos.cope, pos.artikelNr, pos.pershkrimi, pos.cmimi].join(';'))
-      }
-    }
-  }
-
-  return { csv: lines.join('\r\n'), count: rechnungen.length }
-}
-
 function parseDate(s: string): string {
-  // format dd/MM/yyyy → ISO string
   const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
   if (m) {
     return new Date(`${m[3]}-${m[2]}-${m[1]}`).toISOString()

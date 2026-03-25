@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 
 interface Rechnung {
   id: number
-  kennzeichen: string
+  targa: string
   nrFatura: string
   nrv: string
   faturoi: string
@@ -169,7 +169,7 @@ function RechnungsCard({ rechnung, onEdit, onPrint, onDelete }: {
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>
-          {rechnung.kennzeichen || '—'}
+          {rechnung.targa || '—'}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
           <span className="tag">{rechnung.faturoi}</span>

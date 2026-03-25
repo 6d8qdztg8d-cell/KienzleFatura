@@ -14,27 +14,27 @@ export interface Position {
 
 export interface Rechnung {
   id: number
-  kennzeichen: string
+  targa: string
   nrFatura: string
   nrv: string
   faturoi: string
   pagesa: string
   dataFatura: string
   pagesaDeri: string
-  kundeName: string
-  kundeNUI: string
-  kundeAdresse: string
-  kundeStadt: string
-  positionen: Position[]
+  emriKlientit: string
+  nuiKlientit: string
+  adresaKlientit: string
+  qytetiKlientit: string
+  pozicionet: Position[]
   totali: number
-  erstellt: string
-  geaendert: string
+  krijuar: string
+  ndryshuar: string
 }
 
 export interface Artikel {
   id: string
-  beschreibung: string
-  preis: number
+  pershkrimi: string
+  cmimi: number
 }
 
 function getAppDir(): string {
@@ -60,38 +60,75 @@ class DatenbankService {
     this.db.pragma('journal_mode = WAL')
     this.db.pragma('synchronous = NORMAL')
     this.db.pragma('foreign_keys = ON')
+    this.migrateToAlbanian()
     this.createTables()
+  }
+
+  private migrateToAlbanian() {
+    const tables = this.db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as any[]
+    const tableNames = tables.map((t: any) => t.name)
+
+    if (tableNames.includes('rechnungen')) {
+      try { this.db.exec('ALTER TABLE rechnungen RENAME TO faturat') } catch {}
+    }
+    if (tableNames.includes('artikel')) {
+      try { this.db.exec('ALTER TABLE artikel RENAME TO artikujt') } catch {}
+    }
+
+    const faturaRenames: [string, string][] = [
+      ['kennzeichen',   'targa'],
+      ['kunde_name',    'emri_klientit'],
+      ['kunde_nui',     'nui_klientit'],
+      ['kunde_adresse', 'adresa_klientit'],
+      ['kunde_stadt',   'qyteti_klientit'],
+      ['positionen',    'pozicionet'],
+      ['erstellt',      'krijuar'],
+      ['geaendert',     'ndryshuar'],
+      ['pdf_path',      'pdf_shtegu'],
+    ]
+    for (const [oldName, newName] of faturaRenames) {
+      try { this.db.exec(`ALTER TABLE faturat RENAME COLUMN ${oldName} TO ${newName}`) } catch {}
+    }
+
+    const artikelRenames: [string, string][] = [
+      ['nummer',       'numri'],
+      ['beschreibung', 'pershkrimi'],
+      ['preis',        'cmimi'],
+    ]
+    for (const [oldName, newName] of artikelRenames) {
+      try { this.db.exec(`ALTER TABLE artikujt RENAME COLUMN ${oldName} TO ${newName}`) } catch {}
+    }
   }
 
   private createTables() {
     this.db.exec(`
-      CREATE TABLE IF NOT EXISTS rechnungen (
-        id            INTEGER PRIMARY KEY AUTOINCREMENT,
-        kennzeichen   TEXT NOT NULL DEFAULT '',
-        nr_fatura     TEXT DEFAULT '',
-        nrv           TEXT DEFAULT 'NRV-',
-        faturoi       TEXT DEFAULT 'Ibrahim',
-        pagesa        TEXT DEFAULT 'Bank',
-        data_fatura   TEXT DEFAULT '',
-        pagesa_deri   TEXT DEFAULT '',
-        kunde_name    TEXT DEFAULT '',
-        kunde_nui     TEXT DEFAULT '',
-        kunde_adresse TEXT DEFAULT '',
-        kunde_stadt   TEXT DEFAULT '',
-        positionen    TEXT DEFAULT '[]',
-        totali        REAL DEFAULT 0,
-        pdf_path      TEXT DEFAULT '',
-        erstellt      TEXT DEFAULT '',
-        geaendert     TEXT DEFAULT ''
+      CREATE TABLE IF NOT EXISTS faturat (
+        id                INTEGER PRIMARY KEY AUTOINCREMENT,
+        targa             TEXT NOT NULL DEFAULT '',
+        nr_fatura         TEXT DEFAULT '',
+        nrv               TEXT DEFAULT 'NRV-',
+        faturoi           TEXT DEFAULT 'Ibrahim',
+        pagesa            TEXT DEFAULT 'Bank',
+        data_fatura       TEXT DEFAULT '',
+        pagesa_deri       TEXT DEFAULT '',
+        emri_klientit     TEXT DEFAULT '',
+        nui_klientit      TEXT DEFAULT '',
+        adresa_klientit   TEXT DEFAULT '',
+        qyteti_klientit   TEXT DEFAULT '',
+        pozicionet        TEXT DEFAULT '[]',
+        totali            REAL DEFAULT 0,
+        pdf_shtegu        TEXT DEFAULT '',
+        krijuar           TEXT DEFAULT '',
+        ndryshuar         TEXT DEFAULT ''
       );
-      CREATE TABLE IF NOT EXISTS artikel (
-        nummer        TEXT PRIMARY KEY,
-        beschreibung  TEXT DEFAULT '',
-        preis         REAL DEFAULT 0
+      CREATE TABLE IF NOT EXISTS artikujt (
+        numri         TEXT PRIMARY KEY,
+        pershkrimi    TEXT DEFAULT '',
+        cmimi         REAL DEFAULT 0
       );
     `)
     try {
-      this.db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_nr_fatura_unique ON rechnungen(nr_fatura) WHERE nr_fatura != ''`)
+      this.db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_nr_fatura_unique ON faturat(nr_fatura) WHERE nr_fatura != ''`)
     } catch (e) {
       console.warn('Index already exists or could not be created:', e)
     }
@@ -100,77 +137,77 @@ class DatenbankService {
   private rowToRechnung(row: any): Rechnung {
     return {
       id: row.id,
-      kennzeichen: row.kennzeichen || '',
+      targa: row.targa || '',
       nrFatura: row.nr_fatura || '',
       nrv: row.nrv || 'NRV-',
       faturoi: row.faturoi || 'Ibrahim',
       pagesa: row.pagesa || 'Bank',
       dataFatura: row.data_fatura || new Date().toISOString(),
       pagesaDeri: row.pagesa_deri || new Date().toISOString(),
-      kundeName: row.kunde_name || '',
-      kundeNUI: row.kunde_nui || '',
-      kundeAdresse: row.kunde_adresse || '',
-      kundeStadt: row.kunde_stadt || '',
-      positionen: (() => {
-        try { return JSON.parse(row.positionen || '[]') } catch { return [] }
+      emriKlientit: row.emri_klientit || '',
+      nuiKlientit: row.nui_klientit || '',
+      adresaKlientit: row.adresa_klientit || '',
+      qytetiKlientit: row.qyteti_klientit || '',
+      pozicionet: (() => {
+        try { return JSON.parse(row.pozicionet || '[]') } catch { return [] }
       })(),
       totali: row.totali || 0,
-      erstellt: row.erstellt || '',
-      geaendert: row.geaendert || ''
+      krijuar: row.krijuar || '',
+      ndryshuar: row.ndryshuar || ''
     }
   }
 
   alleRechnungen(): Rechnung[] {
-    const rows = this.db.prepare('SELECT * FROM rechnungen ORDER BY erstellt DESC').all()
+    const rows = this.db.prepare('SELECT * FROM faturat ORDER BY krijuar DESC').all()
     return rows.map(r => this.rowToRechnung(r))
   }
 
   suchen(q: string): Rechnung[] {
     const pat = `%${q}%`
     const rows = this.db.prepare(
-      `SELECT * FROM rechnungen WHERE
-        kennzeichen LIKE ? OR nr_fatura LIKE ? OR nrv LIKE ? OR faturoi LIKE ? OR pagesa LIKE ?
-        OR kunde_name LIKE ? OR kunde_nui LIKE ? OR kunde_adresse LIKE ? OR kunde_stadt LIKE ?
+      `SELECT * FROM faturat WHERE
+        targa LIKE ? OR nr_fatura LIKE ? OR nrv LIKE ? OR faturoi LIKE ? OR pagesa LIKE ?
+        OR emri_klientit LIKE ? OR nui_klientit LIKE ? OR adresa_klientit LIKE ? OR qyteti_klientit LIKE ?
         OR data_fatura LIKE ?
-      ORDER BY erstellt DESC`
+      ORDER BY krijuar DESC`
     ).all(pat, pat, pat, pat, pat, pat, pat, pat, pat, pat)
     return rows.map(r => this.rowToRechnung(r))
   }
 
   laden(id: number): Rechnung | null {
-    const row = this.db.prepare('SELECT * FROM rechnungen WHERE id = ?').get(id)
+    const row = this.db.prepare('SELECT * FROM faturat WHERE id = ?').get(id)
     return row ? this.rowToRechnung(row) : null
   }
 
   speichern(r: Rechnung): number {
     const now = new Date().toISOString()
-    const posJson = JSON.stringify(r.positionen)
+    const pozJson = JSON.stringify(r.pozicionet)
 
     if (!r.id || r.id === 0) {
-      const existing = this.db.prepare("SELECT id FROM rechnungen WHERE nr_fatura = ? AND nr_fatura != ''").get(r.nrFatura)
+      const existing = this.db.prepare("SELECT id FROM faturat WHERE nr_fatura = ? AND nr_fatura != ''").get(r.nrFatura)
       if (existing) throw new Error(`DUPLICATE_NR_FATURA:${r.nrFatura}`)
       const stmt = this.db.prepare(`
-        INSERT INTO rechnungen
-        (kennzeichen,nr_fatura,nrv,faturoi,pagesa,data_fatura,pagesa_deri,
-         kunde_name,kunde_nui,kunde_adresse,kunde_stadt,positionen,totali,pdf_path,erstellt,geaendert)
+        INSERT INTO faturat
+        (targa,nr_fatura,nrv,faturoi,pagesa,data_fatura,pagesa_deri,
+         emri_klientit,nui_klientit,adresa_klientit,qyteti_klientit,pozicionet,totali,pdf_shtegu,krijuar,ndryshuar)
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
       `)
       const result = stmt.run(
-        r.kennzeichen, r.nrFatura, r.nrv, r.faturoi, r.pagesa,
-        r.dataFatura, r.pagesaDeri, r.kundeName, r.kundeNUI,
-        r.kundeAdresse, r.kundeStadt, posJson, r.totali, '', now, now
+        r.targa, r.nrFatura, r.nrv, r.faturoi, r.pagesa,
+        r.dataFatura, r.pagesaDeri, r.emriKlientit, r.nuiKlientit,
+        r.adresaKlientit, r.qytetiKlientit, pozJson, r.totali, '', now, now
       )
       return result.lastInsertRowid as number
     } else {
       this.db.prepare(`
-        UPDATE rechnungen SET
-        kennzeichen=?,nr_fatura=?,nrv=?,faturoi=?,pagesa=?,data_fatura=?,pagesa_deri=?,
-        kunde_name=?,kunde_nui=?,kunde_adresse=?,kunde_stadt=?,positionen=?,totali=?,geaendert=?
+        UPDATE faturat SET
+        targa=?,nr_fatura=?,nrv=?,faturoi=?,pagesa=?,data_fatura=?,pagesa_deri=?,
+        emri_klientit=?,nui_klientit=?,adresa_klientit=?,qyteti_klientit=?,pozicionet=?,totali=?,ndryshuar=?
         WHERE id=?
       `).run(
-        r.kennzeichen, r.nrFatura, r.nrv, r.faturoi, r.pagesa,
-        r.dataFatura, r.pagesaDeri, r.kundeName, r.kundeNUI,
-        r.kundeAdresse, r.kundeStadt, posJson, r.totali, now, r.id
+        r.targa, r.nrFatura, r.nrv, r.faturoi, r.pagesa,
+        r.dataFatura, r.pagesaDeri, r.emriKlientit, r.nuiKlientit,
+        r.adresaKlientit, r.qytetiKlientit, pozJson, r.totali, now, r.id
       )
       return r.id
     }
@@ -178,7 +215,7 @@ class DatenbankService {
 
   naechsteNrFatura(): string {
     let maxNr = 1493
-    const rows = this.db.prepare('SELECT nr_fatura FROM rechnungen').all() as any[]
+    const rows = this.db.prepare('SELECT nr_fatura FROM faturat').all() as any[]
     for (const row of rows) {
       const n = parseInt(row.nr_fatura)
       if (!isNaN(n) && n > maxNr) maxNr = n
@@ -187,16 +224,16 @@ class DatenbankService {
   }
 
   loeschen(id: number) {
-    this.db.prepare('DELETE FROM rechnungen WHERE id=?').run(id)
+    this.db.prepare('DELETE FROM faturat WHERE id=?').run(id)
   }
 
   alleArtikel(): Artikel[] {
-    const rows = this.db.prepare('SELECT nummer,beschreibung,preis FROM artikel ORDER BY nummer').all() as any[]
-    return rows.map(r => ({ id: r.nummer, beschreibung: r.beschreibung, preis: r.preis }))
+    const rows = this.db.prepare('SELECT numri, pershkrimi, cmimi FROM artikujt ORDER BY numri').all() as any[]
+    return rows.map(r => ({ id: r.numri, pershkrimi: r.pershkrimi, cmimi: r.cmimi }))
   }
 
   artikelSpeichern(a: Artikel) {
-    this.db.prepare('INSERT OR REPLACE INTO artikel(nummer,beschreibung,preis) VALUES(?,?,?)').run(a.id, a.beschreibung, a.preis)
+    this.db.prepare('INSERT OR REPLACE INTO artikujt(numri,pershkrimi,cmimi) VALUES(?,?,?)').run(a.id, a.pershkrimi, a.cmimi)
   }
 
   transaction<T>(fn: () => T): () => T {
@@ -204,15 +241,35 @@ class DatenbankService {
   }
 
   artikelLoeschen(nummer: string) {
-    this.db.prepare('DELETE FROM artikel WHERE nummer=?').run(nummer)
+    this.db.prepare('DELETE FROM artikujt WHERE numri=?').run(nummer)
   }
 
-  rechnungenFiltern(kundeName: string, vonDatum: string, bisDatum: string): Rechnung[] {
+  suchenKunden(q: string): { emriKlientit: string; nuiKlientit: string; adresaKlientit: string; qytetiKlientit: string }[] {
+    if (!q || q.trim().length === 0) return []
+    const pat = `%${q}%`
+    const rows = this.db.prepare(`
+      SELECT emri_klientit, nui_klientit, adresa_klientit, qyteti_klientit,
+             MAX(krijuar) as e_fundit
+      FROM faturat
+      WHERE emri_klientit LIKE ? AND emri_klientit != ''
+      GROUP BY emri_klientit, nui_klientit, adresa_klientit, qyteti_klientit
+      ORDER BY e_fundit DESC
+      LIMIT 8
+    `).all(pat) as any[]
+    return rows.map(r => ({
+      emriKlientit: r.emri_klientit || '',
+      nuiKlientit: r.nui_klientit || '',
+      adresaKlientit: r.adresa_klientit || '',
+      qytetiKlientit: r.qyteti_klientit || ''
+    }))
+  }
+
+  rechnungenFiltern(emriKlientit: string, vonDatum: string, bisDatum: string): Rechnung[] {
     const conditions: string[] = []
     const params: any[] = []
-    if (kundeName && kundeName.trim()) {
-      conditions.push('kunde_name LIKE ?')
-      params.push(`%${kundeName.trim()}%`)
+    if (emriKlientit && emriKlientit.trim()) {
+      conditions.push('emri_klientit LIKE ?')
+      params.push(`%${emriKlientit.trim()}%`)
     }
     if (vonDatum) {
       conditions.push("SUBSTR(data_fatura, 1, 10) >= ?")
@@ -223,28 +280,8 @@ class DatenbankService {
       params.push(bisDatum)
     }
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
-    const rows = this.db.prepare(`SELECT * FROM rechnungen ${where} ORDER BY data_fatura ASC`).all(...params)
+    const rows = this.db.prepare(`SELECT * FROM faturat ${where} ORDER BY data_fatura ASC`).all(...params)
     return rows.map(r => this.rowToRechnung(r))
-  }
-
-  suchenKunden(q: string): { kundeName: string; kundeNUI: string; kundeAdresse: string; kundeStadt: string }[] {
-    if (!q || q.trim().length === 0) return []
-    const pat = `%${q}%`
-    const rows = this.db.prepare(`
-      SELECT kunde_name, kunde_nui, kunde_adresse, kunde_stadt,
-             MAX(erstellt) as letzte
-      FROM rechnungen
-      WHERE kunde_name LIKE ? AND kunde_name != ''
-      GROUP BY kunde_name, kunde_nui, kunde_adresse, kunde_stadt
-      ORDER BY letzte DESC
-      LIMIT 8
-    `).all(pat) as any[]
-    return rows.map(r => ({
-      kundeName: r.kunde_name || '',
-      kundeNUI: r.kunde_nui || '',
-      kundeAdresse: r.kunde_adresse || '',
-      kundeStadt: r.kunde_stadt || ''
-    }))
   }
 }
 

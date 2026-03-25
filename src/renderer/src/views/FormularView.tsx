@@ -11,18 +11,18 @@ interface Position {
 
 interface Rechnung {
   id: number
-  kennzeichen: string
+  targa: string
   nrFatura: string
   nrv: string
   faturoi: string
   pagesa: string
   dataFatura: string
   pagesaDeri: string
-  kundeName: string
-  kundeNUI: string
-  kundeAdresse: string
-  kundeStadt: string
-  positionen: Position[]
+  emriKlientit: string
+  nuiKlientit: string
+  adresaKlientit: string
+  qytetiKlientit: string
+  pozicionet: Position[]
   totali: number
 }
 
@@ -32,7 +32,6 @@ interface Props {
   isVisible: boolean
 }
 
-const FATUROIS = ['Ibrahim', 'Cufa', 'Agnesa']
 const ZAHLUNGSARTEN = ['Bank', 'para t\xeb gatshme']
 
 function toInputDate(iso: string): string {
@@ -54,19 +53,19 @@ function calcGjithsejt(cope: string, cmimi: string): number {
   return anz * prs
 }
 
-function berechneTotal(positionen: Position[]): number {
-  return positionen.reduce((s, p) => s + p.gjithsejt, 0)
+function berechneTotal(pozicionet: Position[]): number {
+  return pozicionet.reduce((s, p) => s + p.gjithsejt, 0)
 }
 
 function newRechnung(): Rechnung {
   const now = new Date()
   const due = new Date(); due.setDate(due.getDate() + 30)
   return {
-    id: 0, kennzeichen: '', nrFatura: '', nrv: 'NRV-',
+    id: 0, targa: '', nrFatura: '', nrv: 'NRV-',
     faturoi: 'Ibrahim', pagesa: 'Bank',
     dataFatura: now.toISOString(), pagesaDeri: due.toISOString(),
-    kundeName: '', kundeNUI: '', kundeAdresse: '', kundeStadt: '',
-    positionen: [newPosition()], totali: 0
+    emriKlientit: '', nuiKlientit: '', adresaKlientit: '', qytetiKlientit: '',
+    pozicionet: [newPosition()], totali: 0
   }
 }
 
@@ -100,64 +99,60 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
     setTimeout(() => setToast(null), 3500)
   }
 
-  // Single atomic state update for any field on r
   function updateField(key: keyof Rechnung, value: any) {
     setR(prev => ({ ...prev, [key]: value }))
   }
 
-  // Single atomic state update for any position field
   function updatePosition(posId: string, field: keyof Position, value: string) {
     setR(prev => {
-      const positionen = prev.positionen.map(p => {
+      const pozicionet = prev.pozicionet.map(p => {
         if (p.id !== posId) return p
         const updated = { ...p, [field]: value }
-        // Always recalculate total for this position
         updated.gjithsejt = calcGjithsejt(updated.cope, updated.cmimi)
         return updated
       })
-      return { ...prev, positionen, totali: berechneTotal(positionen) }
+      return { ...prev, pozicionet, totali: berechneTotal(pozicionet) }
     })
   }
 
-  // Single atomic update when article number is entered (auto-fill)
   function updateArtikelNr(posId: string, nr: string) {
     setR(prev => {
       const artikel = artikelListe.find(a => a.id === nr)
-      const positionen = prev.positionen.map(p => {
+      const pozicionet = prev.pozicionet.map(p => {
         if (p.id !== posId) return p
         if (artikel) {
-          const cmimi = artikel.preis.toFixed(2)
+          const cmimi = artikel.cmimi.toFixed(2)
           return {
             ...p,
             artikelNr: nr,
-            pershkrimi: artikel.beschreibung,
+            pershkrimi: artikel.pershkrimi,
             cmimi,
             gjithsejt: calcGjithsejt(p.cope, cmimi)
           }
         }
         return { ...p, artikelNr: nr }
       })
-      return { ...prev, positionen, totali: berechneTotal(positionen) }
+      return { ...prev, pozicionet, totali: berechneTotal(pozicionet) }
     })
   }
 
   function addPosition() {
-    setR(prev => ({ ...prev, positionen: [...prev.positionen, newPosition()] }))
+    setR(prev => ({ ...prev, pozicionet: [...prev.pozicionet, newPosition()] }))
   }
 
   function removePosition(posId: string) {
     setR(prev => {
-      const positionen = prev.positionen.filter(p => p.id !== posId)
-      return { ...prev, positionen, totali: berechneTotal(positionen) }
+      const pozicionet = prev.pozicionet.filter(p => p.id !== posId)
+      return { ...prev, pozicionet, totali: berechneTotal(pozicionet) }
     })
   }
 
   function speichern() {
     const empty: string[] = []
-    if (!r.kennzeichen.trim()) empty.push('Targa / Kennzeichen')
-    if (!r.kundeName.trim()) empty.push('Emri i klientit')
+    if (!r.targa.trim()) empty.push('Targa')
+    if (!r.emriKlientit.trim()) empty.push('Emri i klientit')
     if (!nrvSuffix.trim()) empty.push('NRV')
-    if (!r.positionen.some(p => p.pershkrimi.trim())) empty.push('Përshkrimi i artikullit')
+    if (!r.pozicionet.some(p => p.pershkrimi.trim())) empty.push('Përshkrimi i artikullit')
     if (empty.length > 0) {
       setConfirmFields(empty)
     } else {
@@ -169,16 +164,16 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
     setConfirmFields(null)
     try {
       const fullNrv = 'NRV-' + nrvSuffix
-      const totali = berechneTotal(r.positionen)
+      const totali = berechneTotal(r.pozicionet)
       const toSave = { ...r, nrv: fullNrv, totali }
       const newId = await window.api.speichernRechnung(toSave)
       const pdfR = {
         ...toSave, id: newId,
         nrv: nrvLocked ? fullNrv : 'NRV-',
-        kennzeichen: kennzeichenLocked ? r.kennzeichen : ''
+        targa: kennzeichenLocked ? r.targa : ''
       }
       await window.api.pdfSpeichern(pdfR).catch((e: any) => console.error('PDF save error:', e))
-      showToast(`Fatura u ruajt: ${r.kennzeichen || '—'}`, true)
+      showToast(`Fatura u ruajt: ${r.targa || '—'}`, true)
       onClear()
     } catch (e: any) {
       const msg = e?.message ?? String(e)
@@ -194,11 +189,11 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
   async function drucken() {
     try {
       const fullNrv = 'NRV-' + nrvSuffix
-      const totali = berechneTotal(r.positionen)
+      const totali = berechneTotal(r.pozicionet)
       await window.api.pdfDrucken({
         ...r,
         nrv: nrvLocked ? fullNrv : 'NRV-',
-        kennzeichen: kennzeichenLocked ? r.kennzeichen : '',
+        targa: kennzeichenLocked ? r.targa : '',
         totali
       })
     } catch (e: any) {
@@ -207,7 +202,7 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
     }
   }
 
-  const totali = berechneTotal(r.positionen)
+  const totali = berechneTotal(r.pozicionet)
   const tvsh = totali * 0.18
   const totalBrutto = totali * 1.18
 
@@ -222,7 +217,7 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
         <div style={{ flex: 1 }}>
           <div className="section-label">{r.id ? 'Edito Faturën' : 'Faturë e Re'}</div>
           <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', marginTop: 3 }}>
-            {r.id ? (r.kennzeichen || 'Faturë') : 'Krijo faturë të re'}
+            {r.id ? (r.targa || 'Faturë') : 'Krijo faturë të re'}
           </div>
         </div>
         <button className="btn-ghost" onClick={onClear}>🗑️ Clear</button>
@@ -234,7 +229,7 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
       <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 900 }}>
 
-          {/* Rechnungs-Info */}
+          {/* Informacioni i Faturës */}
           <div className="card">
             <div className="section-label" style={{ marginBottom: 12 }}>Informacioni i Faturës</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
@@ -254,16 +249,17 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
                 </div>
               </div>
 
+              {/* Targa */}
               <div>
-                <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-sub)', marginBottom: 5 }}>Targa / Kennzeichen</div>
+                <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-sub)', marginBottom: 5 }}>Targa</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <input
                     className="premium-field"
                     style={{ flex: 1, opacity: kennzeichenLocked ? 1 : 0.4 }}
                     placeholder="01-302-YE"
-                    value={r.kennzeichen}
+                    value={r.targa}
                     disabled={!kennzeichenLocked}
-                    onChange={e => updateField('kennzeichen', e.target.value)}
+                    onChange={e => updateField('targa', e.target.value)}
                   />
                   <button
                     onClick={() => setKennzeichenLocked(v => !v)}
@@ -321,32 +317,32 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
 
           {/* Klienti */}
           <div className="card">
-            <div className="section-label" style={{ marginBottom: 12 }}>Klienti / Kundendaten</div>
+            <div className="section-label" style={{ marginBottom: 12 }}>Klienti</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <KundeNameField
-                value={r.kundeName}
-                onChange={v => updateField('kundeName', v)}
+                value={r.emriKlientit}
+                onChange={v => updateField('emriKlientit', v)}
                 onSelect={k => setR(prev => ({
                   ...prev,
-                  kundeName: k.kundeName,
-                  kundeNUI: k.kundeNUI,
-                  kundeAdresse: k.kundeAdresse,
-                  kundeStadt: k.kundeStadt
+                  emriKlientit: k.emriKlientit,
+                  nuiKlientit: k.nuiKlientit,
+                  adresaKlientit: k.adresaKlientit,
+                  qytetiKlientit: k.qytetiKlientit
                 }))}
               />
-              <Field label="NUI / Steuer-Nr." placeholder="K12345678L" value={r.kundeNUI}
-                onChange={v => updateField('kundeNUI', v)} />
-              <Field label="Adresa" placeholder="Rr. Hasan Prishtina" value={r.kundeAdresse}
-                onChange={v => updateField('kundeAdresse', v)} />
-              <Field label="Qyteti / Stadt" placeholder="Prishtinë" value={r.kundeStadt}
-                onChange={v => updateField('kundeStadt', v)} />
+              <Field label="NUI" placeholder="K12345678L" value={r.nuiKlientit}
+                onChange={v => updateField('nuiKlientit', v)} />
+              <Field label="Adresa" placeholder="Rr. Hasan Prishtina" value={r.adresaKlientit}
+                onChange={v => updateField('adresaKlientit', v)} />
+              <Field label="Qyteti" placeholder="Prishtinë" value={r.qytetiKlientit}
+                onChange={v => updateField('qytetiKlientit', v)} />
             </div>
           </div>
 
-          {/* Positionen */}
+          {/* Pozicionet */}
           <div className="card">
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-              <div className="section-label" style={{ flex: 1 }}>Pozicionet / Positionen</div>
+              <div className="section-label" style={{ flex: 1 }}>Pozicionet</div>
               <button onClick={addPosition}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent-hi)', fontSize: 12, fontWeight: 500 }}>
                 + Shto
@@ -358,21 +354,21 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
               color: 'var(--text-muted)', padding: '7px 10px',
               background: 'var(--surface)', borderRadius: 6, marginBottom: 4
             }}>
-              <span style={{ width: 52 }}>Sasi</span>
               <span style={{ width: 70 }}>Nr. Art.</span>
+              <span style={{ width: 52 }}>Sasi</span>
               <span style={{ flex: 1 }}>Përshkrimi</span>
               <span style={{ width: 100, textAlign: 'right' }}>Çmimi</span>
               <span style={{ width: 100, textAlign: 'right' }}>Gjithsejt</span>
               <span style={{ width: 32 }}></span>
             </div>
 
-            {r.positionen.map(pos => (
+            {r.pozicionet.map(pos => (
               <PositionZeile
                 key={pos.id}
                 pos={pos}
                 onDelete={() => removePosition(pos.id)}
-                onCope={v => updatePosition(pos.id, 'cope', v)}
                 onArtikelNr={v => updateArtikelNr(pos.id, v)}
+                onCope={v => updatePosition(pos.id, 'cope', v)}
                 onPershkrimi={v => updatePosition(pos.id, 'pershkrimi', v)}
                 onCmimi={v => updatePosition(pos.id, 'cmimi', v)}
               />
@@ -388,7 +384,7 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
               border: '1px solid rgba(79,70,229,0.2)', borderRadius: 10
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <span style={{ fontSize: 11, color: 'var(--text-sub)' }}>Nën-Totali (pa TVSh)</span>
+                <span style={{ fontSize: 11, color: 'var(--text-sub)' }}>Çmimi (pa TVSh)</span>
                 <span className="mono-amount" style={{ fontSize: 13 }}>{totali.toFixed(2)} €</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -483,10 +479,10 @@ function SelectField({ label, options, value, onChange }: {
 }
 
 interface Kunde {
-  kundeName: string
-  kundeNUI: string
-  kundeAdresse: string
-  kundeStadt: string
+  emriKlientit: string
+  nuiKlientit: string
+  adresaKlientit: string
+  qytetiKlientit: string
 }
 
 function KundeNameField({ value, onChange, onSelect }: {
@@ -527,7 +523,7 @@ function KundeNameField({ value, onChange, onSelect }: {
 
   return (
     <div ref={containerRef} style={{ position: 'relative' }}>
-      <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-sub)', marginBottom: 5 }}>Emri / Name</div>
+      <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-sub)', marginBottom: 5 }}>Emri</div>
       <input
         className="premium-field"
         placeholder="Emri i klientit"
@@ -556,9 +552,9 @@ function KundeNameField({ value, onChange, onSelect }: {
                 borderBottom: i < suggestions.length - 1 ? '1px solid var(--border)' : 'none'
               }}
             >
-              <div style={{ fontWeight: 600, fontSize: 13 }}>{k.kundeName}</div>
+              <div style={{ fontWeight: 600, fontSize: 13 }}>{k.emriKlientit}</div>
               <div style={{ fontSize: 11, opacity: 0.65, marginTop: 1 }}>
-                {[k.kundeAdresse, k.kundeStadt, k.kundeNUI].filter(Boolean).join(' · ')}
+                {[k.adresaKlientit, k.qytetiKlientit, k.nuiKlientit].filter(Boolean).join(' · ')}
               </div>
             </div>
           ))}
@@ -568,11 +564,11 @@ function KundeNameField({ value, onChange, onSelect }: {
   )
 }
 
-function PositionZeile({ pos, onDelete, onCope, onArtikelNr, onPershkrimi, onCmimi }: {
+function PositionZeile({ pos, onDelete, onArtikelNr, onCope, onPershkrimi, onCmimi }: {
   pos: Position
   onDelete: () => void
-  onCope: (v: string) => void
   onArtikelNr: (v: string) => void
+  onCope: (v: string) => void
   onPershkrimi: (v: string) => void
   onCmimi: (v: string) => void
 }) {
@@ -584,10 +580,10 @@ function PositionZeile({ pos, onDelete, onCope, onArtikelNr, onPershkrimi, onCmi
       onMouseLeave={() => setHovered(false)}
       style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '5px 10px' }}
     >
-      <input className="premium-field" style={{ width: 52, flexShrink: 0 }}
-        placeholder="1" value={pos.cope} onChange={e => onCope(e.target.value)} />
       <input className="premium-field" style={{ width: 70, flexShrink: 0 }}
         placeholder="Nr." value={pos.artikelNr} onChange={e => onArtikelNr(e.target.value)} />
+      <input className="premium-field" style={{ width: 52, flexShrink: 0 }}
+        placeholder="" value={pos.cope} onChange={e => onCope(e.target.value)} />
       <input className="premium-field" style={{ flex: 1 }}
         placeholder="Përshkrimi i artikullit…" value={pos.pershkrimi} onChange={e => onPershkrimi(e.target.value)} />
       <input className="premium-field" style={{ width: 100, flexShrink: 0, textAlign: 'right' }}
@@ -600,4 +596,3 @@ function PositionZeile({ pos, onDelete, onCope, onArtikelNr, onPershkrimi, onCmi
     </div>
   )
 }
-

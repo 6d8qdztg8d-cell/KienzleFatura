@@ -113,7 +113,7 @@ app.whenReady().then(() => {
     catch (e) { console.error(e); throw e }
   })
 
-  ipcMain.handle('backup:csvExportieren', async (event, filter: { kundeName: string; vonDatum: string; bisDatum: string }) => {
+  ipcMain.handle('backup:csvExportieren', async (event, filter: { emriKlientit: string; vonDatum: string; bisDatum: string }) => {
     const win = BrowserWindow.fromWebContents(event.sender)!
     const { csv, count } = csvExportieren(filter)
     if (count === 0) return { count: 0, saved: false }

@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react'
 
 interface Artikel {
   id: string
-  beschreibung: string
-  preis: number
+  pershkrimi: string
+  cmimi: number
 }
 
 export default function EinstellungenView() {
   const [artikel, setArtikel] = useState<Artikel[]>([])
   const [neuNummer, setNeuNummer] = useState('')
-  const [neuBeschreibung, setNeuBeschreibung] = useState('')
-  const [neuPreis, setNeuPreis] = useState('')
+  const [neuPershkrimi, setNeuPershkrimi] = useState('')
+  const [neuCmimi, setNeuCmimi] = useState('')
   const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null)
   const [deleteNr, setDeleteNr] = useState<string | null>(null)
 
@@ -27,11 +27,11 @@ export default function EinstellungenView() {
   }
 
   async function shtoArtikullin() {
-    if (!neuNummer.trim() || !neuBeschreibung.trim()) return
-    const preis = parseFloat(neuPreis.replace(',', '.')) || 0
-    await window.api.speichernArtikel({ id: neuNummer.trim(), beschreibung: neuBeschreibung.trim(), preis })
+    if (!neuNummer.trim() || !neuPershkrimi.trim()) return
+    const cmimi = parseFloat(neuCmimi.replace(',', '.')) || 0
+    await window.api.speichernArtikel({ id: neuNummer.trim(), pershkrimi: neuPershkrimi.trim(), cmimi })
     await laden()
-    setNeuNummer(''); setNeuBeschreibung(''); setNeuPreis('')
+    setNeuNummer(''); setNeuPershkrimi(''); setNeuCmimi('')
     showToast(`Artikulli '${neuNummer}' u ruajt.`, true)
   }
 
@@ -51,7 +51,7 @@ export default function EinstellungenView() {
       }}>
         <div style={{ flex: 1 }}>
           <div className="section-label">Katalog</div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', marginTop: 3 }}>Artikujt / Artikel</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', marginTop: 3 }}>Artikujt</div>
         </div>
         <span className="badge">{artikel.length} artikuj</span>
       </div>
@@ -62,11 +62,11 @@ export default function EinstellungenView() {
           {/* Add form */}
           <div className="card">
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
-              <div className="section-label" style={{ flex: 1 }}>Shto Artikull / Artikel hinzufügen</div>
+              <div className="section-label" style={{ flex: 1 }}>Shto Artikull</div>
               <span style={{
                 fontSize: 10, fontWeight: 500, color: 'var(--green)',
                 padding: '3px 8px', background: 'var(--green-bg)', borderRadius: 4
-              }}>Pa TVSh · Ohne MwSt</span>
+              }}>Pa TVSh</span>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 130px', gap: 12, marginBottom: 14 }}>
@@ -75,17 +75,17 @@ export default function EinstellungenView() {
                 <input className="premium-field" placeholder="ART-001" value={neuNummer} onChange={e => setNeuNummer(e.target.value)} />
               </div>
               <div>
-                <div style={{ fontSize: 11, color: 'var(--text-sub)', marginBottom: 5 }}>Përshkrimi / Beschreibung</div>
-                <input className="premium-field" placeholder="p.sh. Ndërrimi i vajit…" value={neuBeschreibung} onChange={e => setNeuBeschreibung(e.target.value)} />
+                <div style={{ fontSize: 11, color: 'var(--text-sub)', marginBottom: 5 }}>Përshkrimi</div>
+                <input className="premium-field" placeholder="p.sh. Ndërrimi i vajit…" value={neuPershkrimi} onChange={e => setNeuPershkrimi(e.target.value)} />
               </div>
               <div>
                 <div style={{ fontSize: 11, color: 'var(--text-sub)', marginBottom: 5 }}>Çmimi pa TVSh (€)</div>
-                <input className="premium-field" style={{ textAlign: 'right' }} placeholder="0.00" value={neuPreis} onChange={e => setNeuPreis(e.target.value)} />
+                <input className="premium-field" style={{ textAlign: 'right' }} placeholder="0.00" value={neuCmimi} onChange={e => setNeuCmimi(e.target.value)} />
               </div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button className="btn-primary" onClick={shtoArtikullin} disabled={!neuNummer.trim() || !neuBeschreibung.trim()}>
+              <button className="btn-primary" onClick={shtoArtikullin} disabled={!neuNummer.trim() || !neuPershkrimi.trim()}>
                 + Shto Artikullin
               </button>
             </div>
@@ -124,9 +124,9 @@ export default function EinstellungenView() {
                     borderRadius: 9, marginBottom: 4
                   }}>
                     <span style={{ width: 90, fontSize: 12, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: 'var(--accent)' }}>{a.id}</span>
-                    <span style={{ flex: 1, fontSize: 13, color: 'var(--text)' }}>{a.beschreibung}</span>
+                    <span style={{ flex: 1, fontSize: 13, color: 'var(--text)' }}>{a.pershkrimi}</span>
                     <span style={{ width: 120, textAlign: 'right', fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: 'var(--text)' }}>
-                      {a.preis.toFixed(2)} €
+                      {a.cmimi.toFixed(2)} €
                     </span>
                     <button className="btn-icon" style={{ width: 36, color: 'rgba(220,38,38,0.7)' }} onClick={() => setDeleteNr(a.id)}>🗑️</button>
                   </div>

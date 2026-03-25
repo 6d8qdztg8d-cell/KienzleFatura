@@ -7,7 +7,7 @@ interface BackupEntry {
 }
 
 interface ExportFilter {
-  kundeName: string
+  emriKlientit: string
   vonDatum: string
   bisDatum: string
 }
@@ -27,7 +27,7 @@ export default function BackupView() {
   const [loading, setLoading] = useState('')
   const [showExportModal, setShowExportModal] = useState(false)
   const [exportFilter, setExportFilter] = useState<ExportFilter>({
-    kundeName: '',
+    emriKlientit: '',
     vonDatum: firstOfMonthStr(),
     bisDatum: todayStr()
   })
@@ -207,8 +207,8 @@ export default function BackupView() {
                   className="input"
                   type="text"
                   placeholder="p.sh. Petrit Gashi"
-                  value={exportFilter.kundeName}
-                  onChange={e => setExportFilter(f => ({ ...f, kundeName: e.target.value }))}
+                  value={exportFilter.emriKlientit}
+                  onChange={e => setExportFilter(f => ({ ...f, emriKlientit: e.target.value }))}
                   style={{ width: '100%', boxSizing: 'border-box' }}
                   autoFocus
                 />
