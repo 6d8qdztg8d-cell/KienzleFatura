@@ -17,10 +17,10 @@ function alteBackupsAufraeumen(): void {
 }
 
 export function autoBackup(): void {
-  const today = new Date().toISOString().slice(0, 10)
   const backups = alleBackups()
-  const heuteExistiert = backups.some(b => b.name.includes(today))
-  if (!heuteExistiert) {
+  const vor7Tagen = Date.now() - 7 * 24 * 60 * 60 * 1000
+  const kurzlichExistiert = backups.some(b => new Date(b.created).getTime() > vor7Tagen)
+  if (!kurzlichExistiert) {
     try { backupErstellen() } catch (e) { console.error('Auto-backup failed:', e) }
   }
 }
