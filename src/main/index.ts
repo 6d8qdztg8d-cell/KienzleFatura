@@ -57,7 +57,7 @@ app.whenReady().then(() => {
     try { db.loeschen(id) } catch (e) { console.error(e) }
   })
   ipcMain.handle('db:naechsteNrFatura', () => {
-    try { return db.naechsteNrFatura() } catch (e) { console.error(e); return '1' }
+    try { return db.naechsteNrFatura() } catch (e) { console.error(e); return '1494' }
   })
   ipcMain.handle('db:alleArtikel', () => {
     try { return db.alleArtikel() } catch (e) { console.error(e); return [] }
