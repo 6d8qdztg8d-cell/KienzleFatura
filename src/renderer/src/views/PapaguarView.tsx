@@ -53,14 +53,14 @@ export default function PapaguarView({ isVisible }: Props) {
         padding: '16px 24px', background: 'var(--card)',
         borderBottom: '1px solid var(--border)', flexShrink: 0
       }}>
-        <div className="section-label">Fatura t\xeb Papaguara</div>
+        <div className="section-label">Fatura të Papaguara</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, marginTop: 3 }}>
           <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>
-            {faturat.length} fatura t\xeb hapura
+            {faturat.length} fatura të hapura
           </div>
           {faturat.length > 0 && (
             <div style={{ fontSize: 13, color: 'var(--red)', fontWeight: 600 }}>
-              Gjithsej: {totalHapura.toFixed(2)} \u20ac
+              Gjithsej: {totalHapura.toFixed(2)} €
             </div>
           )}
         </div>
@@ -73,7 +73,7 @@ export default function PapaguarView({ isVisible }: Props) {
             textAlign: 'center', color: 'var(--text-muted)',
             marginTop: 60, fontSize: 14
           }}>
-            \u2713 Nuk ka fatura t\xeb papaguara
+            ✓ Nuk ka fatura të papaguara
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 900 }}>
@@ -87,7 +87,7 @@ export default function PapaguarView({ isVisible }: Props) {
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                       <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>
-                        {r.emriKlientit || '\u2014'}
+                        {r.emriKlientit || '—'}
                       </span>
                       <span style={{
                         fontSize: 11, color: 'var(--text-muted)',
@@ -105,7 +105,7 @@ export default function PapaguarView({ isVisible }: Props) {
                       )}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--text-sub)', marginTop: 4 }}>
-                      Pagesa deri: {formatDate(r.pagesaDeri)} \xb7 {r.pagesa}
+                      Pagesa deri: {formatDate(r.pagesaDeri)} · {r.pagesa}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -113,7 +113,7 @@ export default function PapaguarView({ isVisible }: Props) {
                       fontSize: 16, fontWeight: 700,
                       color: overdue ? 'var(--red)' : 'var(--accent-hi)'
                     }}>
-                      {(r.totali * 1.18).toFixed(2)} \u20ac
+                      {(r.totali * 1.18).toFixed(2)} €
                     </div>
                     <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>me TVSh</div>
                   </div>
@@ -122,7 +122,7 @@ export default function PapaguarView({ isVisible }: Props) {
                     onClick={() => setConfirmId(r.id)}
                     style={{ flexShrink: 0, fontSize: 12 }}
                   >
-                    \u2713 E paguar
+                    ✓ E paguar
                   </button>
                 </div>
               )
@@ -145,10 +145,10 @@ export default function PapaguarView({ isVisible }: Props) {
               boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
             }}>
               <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: 'var(--text)' }}>
-                Konfirmo pagen\xebn
+                Konfirmo pagesën
               </div>
               <div style={{ fontSize: 13, color: 'var(--text-sub)', marginBottom: 20 }}>
-                A e konfirmon q\xeb fatura <strong>Nr. {r?.nrFatura}</strong> ({r?.emriKlientit}) \xebsht\xeb paguar?
+                A e konfirmon që fatura <strong>Nr. {r?.nrFatura}</strong> ({r?.emriKlientit}) është paguar?
               </div>
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                 <button className="btn-ghost" onClick={() => setConfirmId(null)}>Jo, anulo</button>

@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 
 const QYTETET: Record<string, string> = {
-  '01': 'Pristhin\xeb',
-  '02': 'Mitrovic\xeb',
-  '03': 'Pej\xeb',
-  '04': 'Gjakov\xeb',
+  '01': 'Prishtinë',
+  '02': 'Mitrovicë',
+  '03': 'Pejë',
+  '04': 'Gjakovë',
   '05': 'Ferizaj',
   '06': 'Gjilan',
   '07': 'Prizren',
@@ -31,7 +31,7 @@ export default function StatistikaView({ isVisible }: Props) {
     }
   }, [isVisible])
 
-  // Top 5 klient\xebt sipas qarkullimit (totali pa TVSh)
+  // Top 5 klientët sipas qarkullimit (totali pa TVSh)
   const klientetMap = new Map<string, number>()
   for (const r of faturat) {
     if (!r.emriKlientit) continue
@@ -43,7 +43,7 @@ export default function StatistikaView({ isVisible }: Props) {
 
   const maxTop5 = top5.length > 0 ? top5[0][1] : 1
 
-  // Qytetet sipas prefiksit t\xeb targes
+  // Qytetet sipas prefiksit të targes
   const qytetetMap = new Map<string, number>()
   for (const r of faturat) {
     if (!r.targa) continue
@@ -81,18 +81,18 @@ export default function StatistikaView({ isVisible }: Props) {
           {/* KPI cards */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
             <KpiCard label="Fatura gjithsej" value={String(faturat.length)} />
-            <KpiCard label="Qarkullimi (pa TVSh)" value={`${totalQarkullimi.toFixed(0)} \u20ac`} accent />
-            <KpiCard label="T\xeb paguara" value={String(totalPaguara)} color="var(--green)" />
-            <KpiCard label="T\xeb papaguara" value={String(totalPapaguara)} color="var(--red)" />
+            <KpiCard label="Qarkullimi (pa TVSh)" value={`${totalQarkullimi.toFixed(0)} €`} accent />
+            <KpiCard label="Të paguara" value={String(totalPaguara)} color="var(--green)" />
+            <KpiCard label="Të papaguara" value={String(totalPapaguara)} color="var(--red)" />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
-            {/* Top 5 Klient\xebt */}
+            {/* Top 5 Klientët */}
             <div className="card">
-              <div className="section-label" style={{ marginBottom: 16 }}>Top 5 Klient\xebt</div>
+              <div className="section-label" style={{ marginBottom: 16 }}>Top 5 Klientët</div>
               {top5.length === 0 ? (
-                <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>Nuk ka t\xeb dh\xebna</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>Nuk ka të dhëna</div>
               ) : top5.map(([emri, totali], i) => (
                 <div key={emri} style={{ marginBottom: 14 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
@@ -111,7 +111,7 @@ export default function StatistikaView({ isVisible }: Props) {
                       fontSize: 12, fontWeight: 700,
                       color: i === 0 ? 'var(--accent-hi)' : 'var(--text-sub)',
                       flexShrink: 0
-                    }}>{totali.toFixed(0)} \u20ac</div>
+                    }}>{totali.toFixed(0)} €</div>
                   </div>
                   <div style={{ height: 5, background: 'var(--surface)', borderRadius: 3, overflow: 'hidden' }}>
                     <div style={{
@@ -139,7 +139,8 @@ export default function StatistikaView({ isVisible }: Props) {
                       {name}
                     </span>
                     <span style={{
-                      fontSize: 12, color: count > 0 ? 'var(--text)' : 'var(--text-muted)',
+                      fontSize: 12,
+                      color: count > 0 ? 'var(--text)' : 'var(--text-muted)',
                       fontWeight: count > 0 ? 600 : 400
                     }}>{count}</span>
                   </div>
