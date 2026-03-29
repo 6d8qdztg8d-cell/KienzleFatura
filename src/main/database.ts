@@ -272,7 +272,7 @@ class DatenbankService {
   }
 
   faturatPapagura(): Rechnung[] {
-    const rows = this.db.prepare('SELECT * FROM faturat WHERE paguar = 0 ORDER BY pagesa_deri ASC').all()
+    const rows = this.db.prepare("SELECT * FROM faturat WHERE paguar = 0 AND pagesa = 'Bank' ORDER BY pagesa_deri ASC").all()
     return rows.map(r => this.rowToRechnung(r))
   }
 
