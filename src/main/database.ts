@@ -101,6 +101,9 @@ class DatenbankService {
 
     // Shto kolona të reja nëse nuk ekzistojnë
     try { this.db.exec('ALTER TABLE faturat ADD COLUMN paguar INTEGER DEFAULT 0') } catch {}
+
+    // Fshi kolonën faturoi nëse ekziston
+    try { this.db.exec('ALTER TABLE faturat DROP COLUMN faturoi') } catch {}
   }
 
   private createTables() {
