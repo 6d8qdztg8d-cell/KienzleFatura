@@ -60,7 +60,7 @@ export default function StatistikaView({ isVisible }: Props) {
   const maxCount = Math.max(...qytetetList.map(q => q.count), 1)
 
   const totalQarkullimi = faturat.reduce((s, r) => s + r.totali, 0)
-  const isPaguar = (r: Fatura) => r.paguar === 1 || r.pagesa === 'Para të gatshme'
+  const isPaguar = (r: Fatura) => r.paguar === 1 || r.pagesa !== 'Bank'
   const totalPaguara = faturat.filter(isPaguar).length
   const totalPapaguara = faturat.filter(r => !isPaguar(r)).length
 
