@@ -87,8 +87,14 @@ app.whenReady().then(() => {
   })
 
   // ── Backup ────────────────────────────────────────────────────
-  ipcMain.handle('backup:erstellen', () => {
-    try { return backupErstellen() } catch (e) { console.error(e); throw e }
+  ipcMain.handle('backup:erstellen', async (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender)!
+    const result = await dialog.showOpenDialog(win, {
+      title: 'Zgjidhni dosjen për backup',
+      properties: ['openDirectory']
+    })
+    if (result.canceled || !result.filePaths.length) return null
+    try { return backupErstellen(result.filePaths[0]) } catch (e) { console.error(e); throw e }
   })
 
   ipcMain.handle('backup:importieren', async (event) => {

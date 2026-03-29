@@ -47,11 +47,12 @@ export default function BackupView() {
   async function backupErstellen() {
     setLoading('backup')
     try {
-      const path = await window.api.backupErstellen()
+      const zipPath = await window.api.backupErstellen()
+      if (!zipPath) return // user cancelled folder dialog
       await laden()
-      showToast(`Backup erstellt: ${path.split(/[\\/]/).pop()}`, true)
+      showToast(`Backup u ruajt: ${zipPath.split(/[\\/]/).pop()}`, true)
     } catch (e: any) {
-      showToast(`Fehler: ${e.message}`, false)
+      showToast(`Gabim: ${e.message}`, false)
     } finally { setLoading('') }
   }
 

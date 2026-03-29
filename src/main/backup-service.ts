@@ -25,11 +25,11 @@ export function autoBackup(): void {
   }
 }
 
-export function backupErstellen(): string {
+export function backupErstellen(destDir?: string): string {
   const now = new Date()
   const pad = (n: number) => String(n).padStart(2, '0')
   const name = `KienzleFAT_Backup_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}`
-  const zipPath = path.join(db.backupDir, `${name}.zip`)
+  const zipPath = path.join(destDir ?? db.backupDir, `${name}.zip`)
 
   const zip = new AdmZip()
 
