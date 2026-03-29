@@ -17,7 +17,6 @@ export interface Rechnung {
   targa: string
   nrFatura: string
   nrv: string
-  faturoi: string
   pagesa: string
   dataFatura: string
   pagesaDeri: string
@@ -145,7 +144,6 @@ class DatenbankService {
       targa: row.targa || '',
       nrFatura: row.nr_fatura || '',
       nrv: row.nrv || 'NRV-',
-      faturoi: row.faturoi || 'Ibrahim',
       pagesa: row.pagesa || 'Bank',
       dataFatura: row.data_fatura || new Date().toISOString(),
       pagesaDeri: row.pagesa_deri || new Date().toISOString(),
@@ -172,11 +170,11 @@ class DatenbankService {
     const pat = `%${q}%`
     const rows = this.db.prepare(
       `SELECT * FROM faturat WHERE
-        targa LIKE ? OR nr_fatura LIKE ? OR nrv LIKE ? OR faturoi LIKE ? OR pagesa LIKE ?
+        targa LIKE ? OR nr_fatura LIKE ? OR nrv LIKE ? OR pagesa LIKE ?
         OR emri_klientit LIKE ? OR nui_klientit LIKE ? OR adresa_klientit LIKE ? OR qyteti_klientit LIKE ?
         OR data_fatura LIKE ?
       ORDER BY krijuar DESC`
-    ).all(pat, pat, pat, pat, pat, pat, pat, pat, pat, pat)
+    ).all(pat, pat, pat, pat, pat, pat, pat, pat, pat)
     return rows.map(r => this.rowToRechnung(r))
   }
 
@@ -194,12 +192,12 @@ class DatenbankService {
       if (existing) throw new Error(`DUPLICATE_NR_FATURA:${r.nrFatura}`)
       const stmt = this.db.prepare(`
         INSERT INTO faturat
-        (targa,nr_fatura,nrv,faturoi,pagesa,data_fatura,pagesa_deri,
+        (targa,nr_fatura,nrv,pagesa,data_fatura,pagesa_deri,
          emri_klientit,nui_klientit,adresa_klientit,qyteti_klientit,pozicionet,totali,pdf_shtegu,krijuar,ndryshuar)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
       `)
       const result = stmt.run(
-        r.targa, r.nrFatura, r.nrv, r.faturoi, r.pagesa,
+        r.targa, r.nrFatura, r.nrv, r.pagesa,
         r.dataFatura, r.pagesaDeri, r.emriKlientit, r.nuiKlientit,
         r.adresaKlientit, r.qytetiKlientit, pozJson, r.totali, '', now, now
       )
@@ -207,11 +205,11 @@ class DatenbankService {
     } else {
       this.db.prepare(`
         UPDATE faturat SET
-        targa=?,nr_fatura=?,nrv=?,faturoi=?,pagesa=?,data_fatura=?,pagesa_deri=?,
+        targa=?,nr_fatura=?,nrv=?,pagesa=?,data_fatura=?,pagesa_deri=?,
         emri_klientit=?,nui_klientit=?,adresa_klientit=?,qyteti_klientit=?,pozicionet=?,totali=?,ndryshuar=?
         WHERE id=?
       `).run(
-        r.targa, r.nrFatura, r.nrv, r.faturoi, r.pagesa,
+        r.targa, r.nrFatura, r.nrv, r.pagesa,
         r.dataFatura, r.pagesaDeri, r.emriKlientit, r.nuiKlientit,
         r.adresaKlientit, r.qytetiKlientit, pozJson, r.totali, now, r.id
       )

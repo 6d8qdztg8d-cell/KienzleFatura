@@ -95,14 +95,14 @@ export function csvExportieren(filter: { emriKlientit: string; vonDatum: string;
   }
 
   const lines: string[] = []
-  lines.push('nrFatura;targa;nrv;dataFatura;pagesaDeri;faturoi;pagesa;emriKlientit;nuiKlientit;adresaKlientit;qytetiKlientit;cope;artikelNr;pershkrimi;cmimi')
+  lines.push('nrFatura;targa;nrv;dataFatura;pagesaDeri;pagesa;emriKlientit;nuiKlientit;adresaKlientit;qytetiKlientit;cope;artikelNr;pershkrimi;cmimi')
 
   for (const r of faturat) {
     if (r.pozicionet.length === 0) {
-      lines.push([r.nrFatura, r.targa, r.nrv, formatDate(r.dataFatura), formatDate(r.pagesaDeri), r.faturoi, r.pagesa, r.emriKlientit, r.nuiKlientit, r.adresaKlientit, r.qytetiKlientit, '', '', '', ''].join(';'))
+      lines.push([r.nrFatura, r.targa, r.nrv, formatDate(r.dataFatura), formatDate(r.pagesaDeri), r.pagesa, r.emriKlientit, r.nuiKlientit, r.adresaKlientit, r.qytetiKlientit, '', '', '', ''].join(';'))
     } else {
       for (const pos of r.pozicionet) {
-        lines.push([r.nrFatura, r.targa, r.nrv, formatDate(r.dataFatura), formatDate(r.pagesaDeri), r.faturoi, r.pagesa, r.emriKlientit, r.nuiKlientit, r.adresaKlientit, r.qytetiKlientit, pos.cope, pos.artikelNr, pos.pershkrimi, pos.cmimi].join(';'))
+        lines.push([r.nrFatura, r.targa, r.nrv, formatDate(r.dataFatura), formatDate(r.pagesaDeri), r.pagesa, r.emriKlientit, r.nuiKlientit, r.adresaKlientit, r.qytetiKlientit, pos.cope, pos.artikelNr, pos.pershkrimi, pos.cmimi].join(';'))
       }
     }
   }
@@ -125,28 +125,27 @@ export function csvImportieren(csvPath: string): number {
 
   for (const line of dataLines) {
     const cols = line.split(';')
-    if (cols.length < 15) continue
+    if (cols.length < 14) continue
 
     const nrFatura      = trim(cols[0])
     const targa         = trim(cols[1])
     const nrv           = trim(cols[2])
     const dataFatura    = parseDate(trim(cols[3]))
     const pagesaDeri    = parseDate(trim(cols[4]))
-    const faturoi       = trim(cols[5])
-    const pagesa        = trim(cols[6])
-    const emriKlientit  = trim(cols[7])
-    const nuiKlientit   = trim(cols[8])
-    const adresaKlientit = trim(cols[9])
-    const qytetiKlientit = trim(cols[10])
-    const cope          = trim(cols[11])
-    const artikelNr     = trim(cols[12])
-    const pershkrimi    = trim(cols[13])
-    const cmimi         = trim(cols[14])
+    const pagesa        = trim(cols[5])
+    const emriKlientit  = trim(cols[6])
+    const nuiKlientit   = trim(cols[7])
+    const adresaKlientit = trim(cols[8])
+    const qytetiKlientit = trim(cols[9])
+    const cope          = trim(cols[10])
+    const artikelNr     = trim(cols[11])
+    const pershkrimi    = trim(cols[12])
+    const cmimi         = trim(cols[13])
 
     if (!gruppen.has(nrFatura)) {
       gruppen.set(nrFatura, {
         rechnung: {
-          id: 0, targa, nrFatura, nrv, faturoi, pagesa,
+          id: 0, targa, nrFatura, nrv, pagesa,
           dataFatura, pagesaDeri, emriKlientit, nuiKlientit, adresaKlientit, qytetiKlientit,
           totali: 0
         },

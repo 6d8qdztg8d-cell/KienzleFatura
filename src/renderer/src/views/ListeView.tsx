@@ -5,7 +5,6 @@ interface Rechnung {
   targa: string
   nrFatura: string
   nrv: string
-  faturoi: string
   pagesa: string
   dataFatura: string
   totali: number
@@ -172,7 +171,6 @@ function RechnungsCard({ rechnung, onEdit, onPrint, onDelete }: {
           {rechnung.targa || '—'}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-          <span className="tag">{rechnung.faturoi}</span>
           <span className="tag">{rechnung.pagesa}</span>
           <span style={{ fontSize: 11, color: 'var(--text-sub)' }}>{fmtDate(rechnung.dataFatura)}</span>
           {rechnung.nrFatura && (

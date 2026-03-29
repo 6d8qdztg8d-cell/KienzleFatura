@@ -14,7 +14,6 @@ interface Rechnung {
   targa: string
   nrFatura: string
   nrv: string
-  faturoi: string
   pagesa: string
   dataFatura: string
   pagesaDeri: string
@@ -63,7 +62,7 @@ function newRechnung(): Rechnung {
   const due = new Date(); due.setDate(due.getDate() + 30)
   return {
     id: 0, targa: '', nrFatura: '', nrv: 'NRV-',
-    faturoi: 'Ibrahim', pagesa: 'Bank',
+    pagesa: 'Bank',
     dataFatura: now.toISOString(), pagesaDeri: due.toISOString(),
     emriKlientit: '', nuiKlientit: '', adresaKlientit: '', qytetiKlientit: '',
     pozicionet: [newPosition()], totali: 0
