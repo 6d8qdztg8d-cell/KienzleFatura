@@ -73,7 +73,7 @@ export default function App() {
             return (
               <button
                 key={item.key}
-                onClick={() => setSelected(item.key)}
+                onClick={() => item.key === 'formular' ? handleNeueRechnung() : setSelected(item.key)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   width: '100%', padding: '8px 12px', marginBottom: 2,
@@ -96,7 +96,7 @@ export default function App() {
 
         {/* Footer */}
         <div style={{ borderTop: '1px solid var(--border)', padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0.46 · ©2026 Kienzle Sh.P.K.</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0.47 · ©2026 Kienzle Sh.P.K.</div>
         </div>
       </div>
 
