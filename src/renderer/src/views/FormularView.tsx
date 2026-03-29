@@ -30,6 +30,7 @@ interface Props {
   rechnung: Rechnung | null
   onClear: () => void
   isVisible: boolean
+  resetSignal: number
 }
 
 const ZAHLUNGSARTEN = ['Bank', 'Para t\xeb gatshme']
@@ -69,7 +70,7 @@ function newRechnung(): Rechnung {
   }
 }
 
-export default function FormularView({ rechnung: initialRechnung, onClear, isVisible }: Props) {
+export default function FormularView({ rechnung: initialRechnung, onClear, isVisible, resetSignal }: Props) {
   const [r, setR] = useState<Rechnung>(initialRechnung ?? newRechnung())
   const [nrvSuffix, setNrvSuffix] = useState('')
   const [artikelListe, setArtikelListe] = useState<any[]>([])
@@ -78,21 +79,29 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
   const [kennzeichenLocked, setKennzeichenLocked] = useState(true)
   const [nrvLocked, setNrvLocked] = useState(true)
 
+  // Runs when resetSignal changes (Clear, after Save, or Edit from list)
   useEffect(() => {
-    if (isVisible) window.api.alleArtikel().then(setArtikelListe).catch(console.error)
-  }, [isVisible])
-
-  useEffect(() => {
-    window.api.alleArtikel().then(setArtikelListe).catch(console.error)
-    if (!initialRechnung) {
+    setConfirmFields(null)
+    setKennzeichenLocked(true)
+    setNrvLocked(true)
+    if (initialRechnung) {
+      setR(initialRechnung)
+      const nrv = initialRechnung.nrv || 'NRV-'
+      setNrvSuffix(nrv.startsWith('NRV-') ? nrv.slice(4) : nrv)
+    } else {
+      const fresh = newRechnung()
+      setR(fresh)
+      setNrvSuffix('')
       window.api.naechsteNrFatura().then((nr: string) => {
         setR(prev => ({ ...prev, nrFatura: nr }))
       }).catch(console.error)
-    } else {
-      const nrv = initialRechnung.nrv || 'NRV-'
-      setNrvSuffix(nrv.startsWith('NRV-') ? nrv.slice(4) : nrv)
     }
-  }, [])
+    window.api.alleArtikel().then(setArtikelListe).catch(console.error)
+  }, [resetSignal])
+
+  useEffect(() => {
+    if (isVisible) window.api.alleArtikel().then(setArtikelListe).catch(console.error)
+  }, [isVisible])
 
   function showToast(text: string, ok: boolean) {
     setToast({ text, ok })

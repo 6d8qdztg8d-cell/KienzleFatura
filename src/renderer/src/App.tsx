@@ -96,7 +96,7 @@ export default function App() {
 
         {/* Footer */}
         <div style={{ borderTop: '1px solid var(--border)', padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0.45 · ©2026 Kienzle Sh.P.K.</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0.46 · ©2026 Kienzle Sh.P.K.</div>
         </div>
       </div>
 
@@ -104,7 +104,7 @@ export default function App() {
       <div style={{ flex: 1, overflow: 'hidden', background: 'var(--surface)' }}>
         <div style={{ display: selected === 'formular' ? 'flex' : 'none', flexDirection: 'column', height: '100%' }}>
           <FormularView
-            key={formKey}
+            resetSignal={formKey}
             rechnung={editRechnung as any}
             onClear={handleNeueRechnung}
             isVisible={selected === 'formular'}
