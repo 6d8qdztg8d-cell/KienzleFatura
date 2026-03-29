@@ -32,7 +32,7 @@ interface Props {
   isVisible: boolean
 }
 
-const ZAHLUNGSARTEN = ['Bank', 'para t\xeb gatshme']
+const ZAHLUNGSARTEN = ['Bank', 'Para t\xeb gatshme']
 
 function toInputDate(iso: string): string {
   try { return new Date(iso).toISOString().slice(0, 10) } catch { return '' }
@@ -77,6 +77,8 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
   const [confirmFields, setConfirmFields] = useState<string[] | null>(null)
   const [kennzeichenLocked, setKennzeichenLocked] = useState(true)
   const [nrvLocked, setNrvLocked] = useState(true)
+  const [isDirty, setIsDirty] = useState(false)
+  const [confirmClear, setConfirmClear] = useState(false)
 
   useEffect(() => {
     if (isVisible) window.api.alleArtikel().then(setArtikelListe).catch(console.error)
@@ -100,10 +102,12 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
   }
 
   function updateField(key: keyof Rechnung, value: any) {
+    setIsDirty(true)
     setR(prev => ({ ...prev, [key]: value }))
   }
 
   function updatePosition(posId: string, field: keyof Position, value: string) {
+    setIsDirty(true)
     setR(prev => {
       const pozicionet = prev.pozicionet.map(p => {
         if (p.id !== posId) return p
@@ -173,6 +177,7 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
         targa: kennzeichenLocked ? r.targa : ''
       }
       await window.api.pdfSpeichern(pdfR).catch((e: any) => console.error('PDF save error:', e))
+      setIsDirty(false)
       showToast(`Fatura u ruajt: ${r.targa || '—'}`, true)
       onClear()
     } catch (e: any) {
@@ -220,7 +225,7 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
             {r.id ? (r.targa || 'Faturë') : 'Krijo faturë të re'}
           </div>
         </div>
-        <button className="btn-ghost" onClick={onClear}>🗑️ Clear</button>
+        <button className="btn-ghost" onClick={() => isDirty ? setConfirmClear(true) : onClear()}>🗑️ Clear</button>
         <button className="btn-ghost" onClick={drucken}>🖨️ Printo</button>
         <button className="btn-primary" onClick={speichern}>💾 Ruaj</button>
       </div>
@@ -259,7 +264,7 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
                     placeholder="01-302-YE"
                     value={r.targa}
                     disabled={!kennzeichenLocked}
-                    onChange={e => updateField('targa', e.target.value)}
+                    onChange={e => updateField('targa', e.target.value.toUpperCase())}
                   />
                   <button
                     onClick={() => setKennzeichenLocked(v => !v)}
@@ -290,7 +295,7 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
                       placeholder="01/0478"
                       value={nrvSuffix}
                       disabled={!nrvLocked}
-                      onChange={e => setNrvSuffix(e.target.value)}
+                      onChange={e => { setIsDirty(true); setNrvSuffix(e.target.value) }}
                     />
                   </div>
                   <button
@@ -330,7 +335,7 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
                   qytetiKlientit: k.qytetiKlientit
                 }))}
               />
-              <Field label="NUI" placeholder="K12345678L" value={r.nuiKlientit}
+              <Field label="NUI (Numri Unik Identifikues)" placeholder="K12345678L" value={r.nuiKlientit}
                 onChange={v => updateField('nuiKlientit', v)} />
               <Field label="Adresa" placeholder="Rr. Hasan Prishtina" value={r.adresaKlientit}
                 onChange={v => updateField('adresaKlientit', v)} />
@@ -400,6 +405,31 @@ export default function FormularView({ rechnung: initialRechnung, onClear, isVis
           </div>
         </div>
       </div>
+
+      {confirmClear && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999
+        }}>
+          <div style={{
+            background: 'var(--card)', border: '1px solid var(--border)',
+            borderRadius: 12, padding: 24, minWidth: 340,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
+          }}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: 'var(--text)' }}>
+              Fatura nuk u ruajt
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--text-sub)', marginBottom: 20 }}>
+              Ke ndryshime të paruajtura. A je i sigurt që dëshiron të hapësh faturë të re?
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button className="btn-ghost" onClick={() => setConfirmClear(false)}>Jo, kthehu</button>
+              <button className="btn-primary" style={{ background: 'var(--red)', borderColor: 'var(--red)' }}
+                onClick={() => { setConfirmClear(false); onClear() }}>Po, hiq</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {confirmFields && (
         <div style={{
@@ -523,7 +553,7 @@ function KundeNameField({ value, onChange, onSelect }: {
 
   return (
     <div ref={containerRef} style={{ position: 'relative' }}>
-      <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-sub)', marginBottom: 5 }}>Emri</div>
+      <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-sub)', marginBottom: 5 }}>Emri i klientit</div>
       <input
         className="premium-field"
         placeholder="Emri i klientit"

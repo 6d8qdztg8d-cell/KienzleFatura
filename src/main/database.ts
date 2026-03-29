@@ -27,6 +27,7 @@ export interface Rechnung {
   qytetiKlientit: string
   pozicionet: Position[]
   totali: number
+  paguar: number
   krijuar: string
   ndryshuar: string
 }
@@ -98,6 +99,9 @@ class DatenbankService {
     for (const [oldName, newName] of artikelRenames) {
       try { this.db.exec(`ALTER TABLE artikujt RENAME COLUMN ${oldName} TO ${newName}`) } catch {}
     }
+
+    // Shto kolona të reja nëse nuk ekzistojnë
+    try { this.db.exec('ALTER TABLE faturat ADD COLUMN paguar INTEGER DEFAULT 0') } catch {}
   }
 
   private createTables() {
@@ -117,6 +121,7 @@ class DatenbankService {
         qyteti_klientit   TEXT DEFAULT '',
         pozicionet        TEXT DEFAULT '[]',
         totali            REAL DEFAULT 0,
+        paguar            INTEGER DEFAULT 0,
         pdf_shtegu        TEXT DEFAULT '',
         krijuar           TEXT DEFAULT '',
         ndryshuar         TEXT DEFAULT ''
@@ -152,6 +157,7 @@ class DatenbankService {
         try { return JSON.parse(row.pozicionet || '[]') } catch { return [] }
       })(),
       totali: row.totali || 0,
+      paguar: row.paguar ?? 0,
       krijuar: row.krijuar || '',
       ndryshuar: row.ndryshuar || ''
     }
@@ -262,6 +268,15 @@ class DatenbankService {
       adresaKlientit: r.adresa_klientit || '',
       qytetiKlientit: r.qyteti_klientit || ''
     }))
+  }
+
+  faturatPapagura(): Rechnung[] {
+    const rows = this.db.prepare('SELECT * FROM faturat WHERE paguar = 0 ORDER BY pagesa_deri ASC').all()
+    return rows.map(r => this.rowToRechnung(r))
+  }
+
+  markuarSiPaguar(id: number) {
+    this.db.prepare('UPDATE faturat SET paguar = 1 WHERE id = ?').run(id)
   }
 
   rechnungenFiltern(emriKlientit: string, vonDatum: string, bisDatum: string): Rechnung[] {

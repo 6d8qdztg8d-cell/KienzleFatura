@@ -9,6 +9,8 @@ const api = {
   loeschenRechnung: (id: number) => ipcRenderer.invoke('db:loeschen', id),
   naechsteNrFatura: () => ipcRenderer.invoke('db:naechsteNrFatura'),
   suchenKunden: (q: string) => ipcRenderer.invoke('db:suchenKunden', q),
+  faturatPapagura: () => ipcRenderer.invoke('db:faturatPapagura'),
+  markuarSiPaguar: (id: number) => ipcRenderer.invoke('db:markuarSiPaguar', id),
 
   // Artikel
   alleArtikel: () => ipcRenderer.invoke('db:alleArtikel'),

@@ -71,6 +71,12 @@ app.whenReady().then(() => {
   ipcMain.handle('db:suchenKunden', (_, q: string) => {
     try { return db.suchenKunden(q) } catch (e) { console.error(e); return [] }
   })
+  ipcMain.handle('db:faturatPapagura', () => {
+    try { return db.faturatPapagura() } catch (e) { console.error(e); return [] }
+  })
+  ipcMain.handle('db:markuarSiPaguar', (_, id: number) => {
+    try { db.markuarSiPaguar(id) } catch (e) { console.error(e) }
+  })
 
   // ── PDF ───────────────────────────────────────────────────────
   ipcMain.handle('pdf:drucken', async (_, r) => {

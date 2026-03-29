@@ -3,14 +3,18 @@ import ListeView from './views/ListeView'
 import FormularView from './views/FormularView'
 import EinstellungenView from './views/EinstellungenView'
 import BackupView from './views/BackupView'
+import PapaguarView from './views/PapaguarView'
+import StatistikaView from './views/StatistikaView'
 
-type NavItem = 'formular' | 'liste' | 'einstellungen' | 'backup'
+type NavItem = 'formular' | 'liste' | 'papaguar' | 'statistika' | 'einstellungen' | 'backup'
 
 const navItems: { key: NavItem; label: string; icon: string }[] = [
-  { key: 'formular',      label: 'Faturë e Re',  icon: '📄' },
-  { key: 'liste',         label: 'Faturat',       icon: '📋' },
-  { key: 'einstellungen', label: 'Artikujt',      icon: '🏷️' },
-  { key: 'backup',        label: 'Backups',       icon: '💾' },
+  { key: 'formular',      label: 'Faturë e Re',         icon: '📄' },
+  { key: 'liste',         label: 'Faturat',              icon: '📋' },
+  { key: 'papaguar',      label: 'Fatura të papaguar',   icon: '⏳' },
+  { key: 'statistika',    label: 'Statistika',           icon: '📊' },
+  { key: 'einstellungen', label: 'Artikujt',             icon: '🏷️' },
+  { key: 'backup',        label: 'Backups',              icon: '💾' },
 ]
 
 interface EditingRechnung {
@@ -92,7 +96,7 @@ export default function App() {
 
         {/* Footer */}
         <div style={{ borderTop: '1px solid var(--border)', padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0.41 · ©2026 Kienzle Sh.P.K.</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>v1.0.42 · ©2026 Kienzle Sh.P.K.</div>
         </div>
       </div>
 
@@ -108,6 +112,12 @@ export default function App() {
         </div>
         <div style={{ display: selected === 'liste' ? 'flex' : 'none', flexDirection: 'column', height: '100%' }}>
           <ListeView onEdit={handleEdit} isVisible={selected === 'liste'} />
+        </div>
+        <div style={{ display: selected === 'papaguar' ? 'flex' : 'none', flexDirection: 'column', height: '100%' }}>
+          <PapaguarView isVisible={selected === 'papaguar'} />
+        </div>
+        <div style={{ display: selected === 'statistika' ? 'flex' : 'none', flexDirection: 'column', height: '100%' }}>
+          <StatistikaView isVisible={selected === 'statistika'} />
         </div>
         <div style={{ display: selected === 'einstellungen' ? 'flex' : 'none', flexDirection: 'column', height: '100%' }}>
           <EinstellungenView />
